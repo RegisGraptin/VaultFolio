@@ -44,4 +44,24 @@ contract VaultTest is Test {
         assertGt(aUsdcBalance, 0, 'aUSDC balance should increase after supply');
         vm.stopPrank();
     }
+
+    function test_Withdraw() public {
+        uint256 supplyAmount = 1000 * 1e6; // USDC has 6 decimals
+        deal(address(usdc), user, supplyAmount);
+
+        // Step 2: Approve Aave Pool to spend USDC
+        vm.startPrank(user);
+        usdc.approve(address(vault), supplyAmount);
+
+        // Step 3: Supply USDC to Aave
+        vault.supply(address(usdc), supplyAmount);
+
+        // Step 4: Check the user’s aUSDC balance
+        vault.withdraw(address(usdc), supplyAmount);
+        
+        uint256 usdcBalance = usdc.balanceOf(user);
+        assertEq(usdcBalance, supplyAmount, 'USDC balance should be equals to the supply amount');
+        vm.stopPrank();
+    }
+
 }
