@@ -90,16 +90,16 @@ const Faq = () => {
         ))}
 
         <div>
-          <p>
+          <p className="text-center">
             Have another question? Contact me on{" "}
             <Link
               className="underline"
               href={"https://x.com/BuilderRegis"}
               title="BuilderRegis Twitter"
             >
-              Twitter
+              twitter
             </Link>{" "}
-            or by email.
+            or by <Link className="underline" href={"mailto:hello@vaultfolio.xyz"}>email</Link>.
           </p>
         </div>
       </div>

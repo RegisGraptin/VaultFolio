@@ -1,4 +1,4 @@
-import type { NextPage } from "next";
+import type { Metadata, NextPage } from "next";
 import React from "react";
 
 import Footer from "../components/Footer";
@@ -8,6 +8,29 @@ import HowItWorks from "../components/HowItWorks";
 import WhyChooseUs from "../components/WhyChooseUs";
 import Hero from "../components/Hero";
 import Cta from "@/components/Cta";
+
+export const metadata: Metadata = {
+  title: 'VaultFolio - Simplify Your DeFi Strategy | Unified Management & Automated Yield',
+  description: "VaultFolio revolutionizes decentralized finance. Manage all your DeFi strategies in one secure platform—automate yield, isolate risk, and maximize returns on Scroll L2. Join the waitlist today!",
+  keywords: "VaultFolio, DeFi, decentralized finance, yield automation, unified wallet, risk isolation, Scroll L2, lending protocol, crypto management, blockchain automation",
+  alternates: {
+    canonical: "https://www.vaultfolio.xyz"
+  },
+  openGraph: {
+    type: "website",
+    title: "VaultFolio - Simplify Your DeFi Strategy",
+    description: "Experience a seamless, all-in-one platform for managing your DeFi investments. Automate yield, isolate risk, and unify your strategies with VaultFolio.",
+    siteName: "VaultFolio",
+    url: "https://www.vaultfolio.xyz",
+    images: "/images/og.webp",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VaultFolio - Simplify Your DeFi Strategy",
+    description: "Manage all your DeFi strategies in one secure interface. Automate yield, isolate risk, and maximize returns on Scroll L2. Join the waitlist now!",
+    images: "/images/og-twitter.webp",
+  }
+};
 
 const Home: NextPage = () => {
   return (
@@ -24,33 +47,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
-// FIXME:
-// # SEO & Structure Tips
-
-// 1. **Keywords:**
-
-//    - Primary: “DeFi strategy automation,” “multi-vault wallet,” “yield management”
-//    - Secondary: “isolate risk DeFi,” “auto-compound lending protocols”
-//    - Use in headers, meta description, and alt text (e.g., “DeFi vault dashboard screenshot”).
-
-// 2. **Meta Description:**
-//    “Automate DeFi strategies, isolate risk with multi-vaults, and manage lending protocols in one place. Built on Scroll L2.”
-
-// 3. **Internal Linking:**
-
-//    - Link to your hackathon article for context.
-//    - Add a blog section for updates (post-launch).
-
-// 4. **Visual Flow:**
-
-//    - Use hero → problem/solution → features → CTA → FAQ.
-//    - Break text with subheaders, bullet points, and icons.
-
-// 5. **Tone:**
-//    Friendly but professional. Avoid overly technical terms (“non-custodial” is okay, but explain if needed).
-
-// ---
-
-// **Final Note:**
-// Focus on benefits over features. DeFi users care about saving time, reducing risk, and maximizing yields—structure your copy around these themes. Use the blog to dive into technical details, but keep the landing page action-oriented.
