@@ -12,7 +12,7 @@ const faqs: FAQItem[] = [
   {
     question: "Who is this for?",
     answer:
-      "Anyone using lending protocols who wants **better risk control, automation, and higher efficiency.**",
+      "Anyone using lending protocols who wants better risk control, automation, and higher efficiency.",
   },
   {
     question: "How is this different from AAVE/Compound?",
@@ -24,12 +24,12 @@ const faqs: FAQItem[] = [
   },
   {
     question: "What chains do you support?",
-    answer: "Launching on Scroll L2.",
+    answer: "We’re launching on Scroll L2.",
   },
   {
     question: "What platforms do you support?",
     answer:
-      "We are exploring integrations with AAVE at the moment. Open to other DEFI protocol.",
+      "We are exploring integrations with AAVE at the moment. Open to add other Defi protocols.",
   },
 ];
 
