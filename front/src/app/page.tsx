@@ -2,12 +2,12 @@ import type { NextPage } from "next";
 import React from "react";
 
 import Footer from "../components/Footer";
-import Header from "../components/Header";
 import Faq from "../components/Faq";
 import ProblemSolution from "../components/ProblemSolution";
 import HowItWorks from "../components/HowItWorks";
 import WhyChooseUs from "../components/WhyChooseUs";
 import Hero from "../components/Hero";
+import Cta from "@/components/Cta";
 
 const Home: NextPage = () => {
   return (
@@ -16,27 +16,7 @@ const Home: NextPage = () => {
       <ProblemSolution />
       <HowItWorks />
       <WhyChooseUs />
-      {/* CTA Section */}
-      <section
-        id="cta"
-        className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-16 px-4"
-      >
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            Be Part of the Future of Open Finance
-          </h2>
-          <p className="text-lg mb-8">
-            We are building on **Scroll**, leveraging Layer 2 technology for
-            **low fees & high efficiency**. **Join the waitlist today and be
-            among the first to try it!**
-          </p>
-          <a href="#" title="Create an auction">
-            <button className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold shadow-lg hover:bg-gray-200 transition-transform transform hover:scale-105">
-              Join the waitlist
-            </button>
-          </a>
-        </div>
-      </section>
+      <Cta />
       <Faq />
       <Footer />
     </div>

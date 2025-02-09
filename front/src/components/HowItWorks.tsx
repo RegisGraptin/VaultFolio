@@ -4,21 +4,20 @@ import { TbPigMoney } from "react-icons/tb";
 export default function HowItWorks() {
   const steps = [
     {
-      title: "Create a Vault",
-      description:
-        "Name your strategy (e.g., “ETH Growth Fund”) and set risk tolerance.",
+      title: "Set Up Your Vault",
+      description: "Name your strategy and set your risk tolerance.",
       icon: <FaVault />,
     },
     {
-      title: "Set Rules",
+      title: "Configure Your Rules",
       description:
-        "“Use 30% of yield to buy ETH” or “Repay loans if APY drops below 5%.”",
+        "Define actions like “Invest 30% yield in ETH” or “Repay loans with yield.”",
       icon: <FaListCheck />,
     },
     {
-      title: "Automate & Earn",
+      title: "Sit Back & Earn",
       description:
-        "Let the bots handle the rest. Adjust at anytime and any moment.",
+        "Let your strategy flow seamlessly, with full control and easy adjustments.",
       icon: <TbPigMoney />,
     },
   ];
@@ -26,7 +25,12 @@ export default function HowItWorks() {
   return (
     <section className="py-16 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-20">How It Works</h2>
+        <p className="mb-3 text-center text-sm font-medium uppercase tracking-wider text-primary">
+          How it works?
+        </p>
+        <h2 className="text-3xl font-extrabold tracking-tight md:text-5xl text-center mb-20">
+          Launch Your Vault
+        </h2>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           {steps.map((step, index) => (

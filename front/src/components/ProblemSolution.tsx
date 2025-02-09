@@ -1,24 +1,42 @@
 interface Item {
   emoji: string;
   title: string;
-  content: string;
+  content: string | React.ReactNode;
 }
+
+// Potential other pains:
+// - Monitoring positions daily is frustrating and inefficient.
 
 const cons: Item[] = [
   {
     emoji: "😫",
     title: "Fragmented Management",
-    content: "Juggling multiple wallets for different strategies.",
+    content: (
+      <>
+        <span className="font-bold">Juggling multiple wallets</span> for
+        different strategies.
+      </>
+    ),
   },
   {
     emoji: "⏰",
     title: "Manual Work",
-    content: "Claiming rewards, repaying loans, and rebalancing takes hours.",
+    content: (
+      <>
+        Claiming rewards, repaying loans, and rebalancing{" "}
+        <span className="font-bold">takes hours</span>.
+      </>
+    ),
   },
   {
     emoji: "🔄",
     title: "Risk Spillover",
-    content: "One failed strategy risks your entire portfolio.",
+    content: (
+      <>
+        One failed strategy{" "}
+        <span className="font-bold">risks your entire portfolio</span>.
+      </>
+    ),
   },
 ];
 
@@ -26,57 +44,50 @@ const pros: Item[] = [
   {
     emoji: "🗃️",
     title: "Isolated Vaults",
-    content:
-      'Separate strategies by risk level (e.g., "Safe Staking" vs. "High-Yield ETH")',
+    content: (
+      <>
+        <span className="font-bold">Separate strategies by risk level</span>{" "}
+        (e.g., &quot;Safe Staking&quot; vs. &quot;High-Yield ETH&quot;)
+      </>
+    ),
   },
   {
     emoji: "🤖",
     title: "Auto-Pilot Yield",
-    content:
-      "Use earnings to repay loans, buy assets, or compound interest—no manual work.",
+    content: (
+      <>
+        Let your earnings repay loans, reinvest, or auto-buy assets{" "}
+        <span className="font-bold">automatically</span>.
+      </>
+    ),
   },
   {
     emoji: "📊",
     title: "Unified Dashboard",
-    content: "Monitor all positions and protocols in one place.",
+    content: (
+      <>
+        Monitor, adjust, and optimize—
+        <span className="font-bold">all in one place</span>.
+      </>
+    ),
   },
 ];
 
 export default function ProblemSolution() {
-  // FIXME: Specify lending / borrowing issues
-
-  // ## 🤯 The Problem
-
-  // - Managing multiple lending strategies requires multiple wallets.
-  // - Loan repayments and reinvestments are manual and time-consuming.
-  // - Monitoring positions daily is frustrating and inefficient.
-
-  // ---
-
-  // ## 💡 The Solution
-
-  // We provide an **intelligent lending management platform** that enables:
-
-  // - **Multiple risk-adjusted vaults** under a single wallet.
-  // - **Automated loan repayments** using earned yield.
-  // - **Smart rebalancing** across different lending protocols.
-
-  // ✅ **No more manual monitoring.**
-  // ✅ **No need to juggle multiple wallets.**
-  // ✅ **Automate & optimize your lending strategy effortlessly.**
-
   return (
     <>
       <section className="py-16 bg-gradient-to-b from-zinc-50 to-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            From Crypto Chaos to
-            <br className="hidden md:block" /> Effortless Efficiency
+            Tired of managing all your DeFi positions?
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Problem Column */}
-            <div className="space-y-8">
+            <div className="space-y-8 bg-rose-100/75 text-rose-700 p-8 rounded-lg mx-2">
+              <h3 className="text-center font-bold text-lg mb-4">
+                Your DeFi Positions Now
+              </h3>
               {cons.map((con, index) => {
                 return (
                   <div
@@ -98,7 +109,10 @@ export default function ProblemSolution() {
             </div>
 
             {/* Solution Column */}
-            <div className="space-y-8">
+            <div className="space-y-8 bg-emerald-100/70 text-emerald-700 p-8 rounded-lg mx-2">
+              <h3 className="text-center font-bold text-lg mb-4">
+                Your Defi positions with VaultFolio
+              </h3>
               {pros.map((pro, index) => {
                 return (
                   <div

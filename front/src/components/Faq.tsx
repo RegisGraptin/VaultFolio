@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 interface FAQItem {
@@ -25,10 +26,12 @@ const faqs: FAQItem[] = [
     question: "What chains do you support?",
     answer: "Launching on Scroll L2.",
   },
+  {
+    question: "What platforms do you support?",
+    answer:
+      "We are exploring integrations with AAVE at the moment. Open to other DEFI protocol.",
+  },
 ];
-
-// **What platforms do you support?**
-// We are exploring integrations with **AAVE, Compound, and Scroll-native protocols.**
 
 const Faq = () => {
   const [openIndexes, setOpenIndexes] = useState<Number[]>([]);
@@ -85,6 +88,20 @@ const Faq = () => {
             </div>
           </div>
         ))}
+
+        <div>
+          <p>
+            Have another question? Contact me on{" "}
+            <Link
+              className="underline"
+              href={"https://x.com/BuilderRegis"}
+              title="BuilderRegis Twitter"
+            >
+              Twitter
+            </Link>{" "}
+            or by email.
+          </p>
+        </div>
       </div>
     </section>
   );

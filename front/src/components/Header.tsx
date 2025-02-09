@@ -1,23 +1,28 @@
+import Image from 'next/image'
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Link from 'next/link';
 
 export default function Header() {
   return (
     <>
       <nav className="bg-white border-gray-200">
         <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-          <a
+          <Link
             href="/"
             className="flex items-center space-x-3 rtl:space-x-reverse"
+            title={process.env.NEXT_PUBLIC_SITE_NAME}
           >
-            <img
+            <Image
               src="/images/logo.svg"
               className="h-8"
               alt={`${process.env.NEXT_PUBLIC_SITE_NAME} Logo`}
+              width={32}
+              height={32}
             />
             <span className="self-center text-2xl font-semibold whitespace-nowrap">
               {process.env.NEXT_PUBLIC_SITE_NAME}
             </span>
-          </a>
+          </Link>
           <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
             <ConnectButton />
             <button
@@ -48,28 +53,28 @@ export default function Header() {
           <div className="hidden w-full md:block md:w-auto" id="navbar-default">
             <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
               <li>
-                <a
+                <Link
                   href="#about"
                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0"
                 >
                   About
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="#how-it-works"
                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0"
                 >
                   How it works
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="#cta"
                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0"
                 >
                   Get Started
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
