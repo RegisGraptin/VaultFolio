@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 import { WalletProvider } from "../components/wallet/WalletProvider";
 import { Metadata } from "next";
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body>
         <WalletProvider>{children}</WalletProvider>
       </body>
+      {!process.env.DEV_ENV && <GoogleAnalytics gaId="G-Q0HR0JQKQS" />}
     </html>
   );
 }
