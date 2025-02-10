@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
 const Home: NextPage = () => {
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <main className="bg-gray-50 min-h-screen">
       <Hero />
       <ProblemSolution />
       <HowItWorks />
@@ -42,7 +42,7 @@ const Home: NextPage = () => {
       <Cta />
       <Faq />
       <Footer />
-    </div>
+    </main>
   );
 };
 
