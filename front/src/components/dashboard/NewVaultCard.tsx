@@ -15,7 +15,7 @@ interface VaultCreatedEvent {
 
 const NewVaultCard = () => {
   const router = useRouter();
-  
+
   const [open, setOpen] = useState(false);
   const [vaultName, setVaultName] = useState("");
 
@@ -34,15 +34,17 @@ const NewVaultCard = () => {
     isPending: txIsPending,
   } = useWriteContract();
 
-  const { data: txReceipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
-      hash,
+  const {
+    data: txReceipt,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+  } = useWaitForTransactionReceipt({
+    hash,
   });
 
-  
-
   function createNewVault() {
-    console.log("Create a new vault: '" + vaultName + "' - " + selectedColor)
-    console.log(error)
+    console.log("Create a new vault: '" + vaultName + "' - " + selectedColor);
+    console.log(error);
 
     writeContract({
       address: process.env.NEXT_PUBLIC_MANAGER_ADDRESS as Address,
@@ -50,9 +52,7 @@ const NewVaultCard = () => {
       functionName: "createVault",
       args: [],
     });
-
   }
-
 
   useEffect(() => {
     if (txReceipt === undefined) {
@@ -60,12 +60,16 @@ const NewVaultCard = () => {
     }
 
     const vaultAddress = txReceipt.logs
-      .filter(log => log.address.toString().toLowerCase() === process.env.NEXT_PUBLIC_MANAGER_ADDRESS?.toLowerCase())
-      .map(log => {
+      .filter(
+        (log) =>
+          log.address.toString().toLowerCase() ===
+          process.env.NEXT_PUBLIC_MANAGER_ADDRESS?.toLowerCase()
+      )
+      .map((log) => {
         const event = decodeEventLog({
           abi: Manager.abi,
           topics: log.topics,
-          data: log.data
+          data: log.data,
         });
 
         if (event.eventName === "VaultCreated") {
@@ -75,17 +79,16 @@ const NewVaultCard = () => {
 
         return null;
       })
-      .find(vault => vault !== null); // Find the first non-null vault address
+      .find((vault) => vault !== null); // Find the first non-null vault address
 
-      if (vaultAddress) {
-        console.log("Vault address found:", vaultAddress);
-      } else {
-        console.log("VaultCreated event not found in logs.");
-      }
+    if (vaultAddress) {
+      console.log("Vault address found:", vaultAddress);
+    } else {
+      console.log("VaultCreated event not found in logs.");
+    }
 
-
-    console.log("vaultAddress")
-    console.log(vaultAddress)
+    console.log("vaultAddress");
+    console.log(vaultAddress);
 
     router.push(`/vaults/${vaultAddress}`);
   }, [txReceipt]);
@@ -97,7 +100,9 @@ const NewVaultCard = () => {
         onClick={handleOpen}
       >
         <FaPlusCircle className="text-gray-500 text-4xl mb-3" />
-        <h3 className="text-lg font-semibold text-gray-600">Create New Vault</h3>
+        <h3 className="text-lg font-semibold text-gray-600">
+          Create New Vault
+        </h3>
       </div>
 
       {/* Modal */}
@@ -116,36 +121,39 @@ const NewVaultCard = () => {
             {/* Modal Body */}
             <div className="flex flex-col gap-4 p-6">
               <div className="w-full max-w-sm">
-                <label className="block mb-2 text-sm text-slate-600">Vault Name</label>
+                <label className="block mb-2 text-sm text-slate-600">
+                  Vault Name
+                </label>
                 <input
                   type="text"
                   className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
                   placeholder="Vault Name"
                   value={vaultName}
-                  onChange={e => setVaultName(e.target.value)}
+                  onChange={(e) => setVaultName(e.target.value)}
                 />
               </div>
 
               {/* Color Selection */}
               <div>
-                <label className="block mb-2 text-sm text-slate-600">Choose a Color</label>
+                <label className="block mb-2 text-sm text-slate-600">
+                  Choose a Color
+                </label>
                 <div className="flex justify-center gap-3">
                   {colors.map((color) => {
-                    
                     return (
                       <div
                         key={color}
                         className={`w-10 h-10 rounded-xl cursor-pointer border-2 transition-all bg-${color}-100 text-${color}-800 ${
-                          selectedColor === color ? `scale-110 border-${color}-300` : "border-transparent"
+                          selectedColor === color
+                            ? `scale-110 border-${color}-300`
+                            : "border-transparent"
                         }`}
                         onClick={() => setSelectedColor(color)}
                       />
-                  )})}
-                  
+                    );
+                  })}
                 </div>
               </div>
-
-              
             </div>
 
             {/* Modal Footer */}
@@ -157,8 +165,7 @@ const NewVaultCard = () => {
               >
                 Create
               </button>
-                <p>{error && error.message}</p>
-              
+              <p>{error && error.message}</p>
             </div>
           </div>
         </div>

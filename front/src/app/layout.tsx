@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
-import { GoogleAnalytics } from '@next/third-parties/google'
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 import { WalletProvider } from "../components/wallet/WalletProvider";
 import { Metadata } from "next";
@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: "icon",
-      url: "/images/favicon/favicon.ico"
-    }
-  ]
-}
+      url: "/images/favicon/favicon.ico",
+    },
+  ],
+};
 
 export default function RootLayout({
   children,
