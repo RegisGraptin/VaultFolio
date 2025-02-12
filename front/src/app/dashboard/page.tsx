@@ -13,19 +13,33 @@ const Dashboard: NextPage = () => {
     <>
         <Header />
             <main className="bg-gray-50 min-h-screen">
-                <section className="container mx-auto">
-                    <h1>List of vaults</h1>
+                <section className="container mx-auto pt-10">
+                    <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
+                        List of vaults
+                    </h1>
+
+                
 
                         <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         <Card 
                             title="Long Term" 
-                            lendingValue={20}
-                            borrowValue={2}
+                            lendingValue={20000}
+                            borrowValue={0}
                             lendingAPY={4.5}
-                            borrowAPY={2.5}
-                            healthRatio={2}
+                            borrowAPY={0}
+                            healthRatio={100}
                             strategies={["automation", "reinvest"]}
                             color="green" 
+                        />
+                        <Card 
+                            title="Short Term" 
+                            lendingValue={10000}
+                            borrowValue={2000}
+                            lendingAPY={4.5}
+                            borrowAPY={3.5}
+                            healthRatio={2}
+                            strategies={["automation", "reinvest"]}
+                            color="purple" 
                         />
                         <NewVaultCard />
                         

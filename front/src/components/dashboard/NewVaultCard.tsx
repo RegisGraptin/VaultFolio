@@ -1,9 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaPlusCircle } from "react-icons/fa";
+import { Address, decodeEventLog } from "viem";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+
+import Manager from "@/abi/Manager.json";
+import { useRouter } from "next/navigation";
+
+interface VaultCreatedEvent {
+  vault: string;
+  user: string;
+}
 
 const NewVaultCard = () => {
+  const router = useRouter();
+  
   const [open, setOpen] = useState(false);
   const [vaultName, setVaultName] = useState("");
 
@@ -15,9 +27,68 @@ const NewVaultCard = () => {
   const colors = ["red", "blue", "green", "purple", "yellow"];
   const [selectedColor, setSelectedColor] = useState(colors[0]);
 
+  const {
+    data: hash,
+    error,
+    writeContract,
+    isPending: txIsPending,
+  } = useWriteContract();
+
+  const { data: txReceipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+      hash,
+  });
+
+  
+
   function createNewVault() {
     console.log("Create a new vault: '" + vaultName + "' - " + selectedColor)
+    console.log(error)
+
+    writeContract({
+      address: process.env.NEXT_PUBLIC_MANAGER_ADDRESS as Address,
+      abi: Manager.abi,
+      functionName: "createVault",
+      args: [],
+    });
+
   }
+
+
+  useEffect(() => {
+    if (txReceipt === undefined) {
+      return;
+    }
+
+    const vaultAddress = txReceipt.logs
+      .filter(log => log.address.toString().toLowerCase() === process.env.NEXT_PUBLIC_MANAGER_ADDRESS?.toLowerCase())
+      .map(log => {
+        const event = decodeEventLog({
+          abi: Manager.abi,
+          topics: log.topics,
+          data: log.data
+        });
+
+        if (event.eventName === "VaultCreated") {
+          const args = event.args as unknown as VaultCreatedEvent;
+          return args.vault;
+        }
+
+        return null;
+      })
+      .find(vault => vault !== null); // Find the first non-null vault address
+
+      if (vaultAddress) {
+        console.log("Vault address found:", vaultAddress);
+      } else {
+        console.log("VaultCreated event not found in logs.");
+      }
+
+
+    console.log("vaultAddress")
+    console.log(vaultAddress)
+
+    router.push(`/vaults/${vaultAddress}`);
+  }, [txReceipt]);
 
   return (
     <>
@@ -86,6 +157,8 @@ const NewVaultCard = () => {
               >
                 Create
               </button>
+                <p>{error && error.message}</p>
+              
             </div>
           </div>
         </div>
