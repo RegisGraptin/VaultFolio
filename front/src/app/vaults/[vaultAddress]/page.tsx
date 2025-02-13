@@ -1,21 +1,33 @@
 "use client";
 
+import { useContractData } from "@/components/aave/AAVEPositionProvider";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import VaultDashboard from "@/components/vault/VaultDashboard";
 import { NextPage } from "next";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { isAddress } from "viem";
+import { useParams } from "next/navigation";
+import { Address, getAddress, isAddress } from "viem";
+import { useReadContract } from "wagmi";
 
 const VaultPage: NextPage = () => {
   const { vaultAddress } = useParams();
   const isValidAddress = isAddress(vaultAddress as string);
 
+  const contractData = useContractData();
+
+  console.log(contractData);
+
   return (
     <>
+      <Header />
       <main className="bg-gray-50 min-h-screen">
         {isValidAddress && (
           <>
-            <h1>Vault detail</h1>
-            <p>{vaultAddress}</p>
+            <VaultDashboard />
+
+            <p>"some data"</p>
+            <p>{contractData?.healthFactor}</p>
+            <p>{contractData?.availableBorrowsBase}</p>
           </>
         )}
 
@@ -26,6 +38,7 @@ const VaultPage: NextPage = () => {
           </>
         )}
       </main>
+      <Footer />
     </>
   );
 };
