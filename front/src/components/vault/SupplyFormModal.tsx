@@ -1,0 +1,191 @@
+import React, { useEffect, useState } from "react";
+import { Address, erc20Abi, parseUnits } from "viem";
+
+import Vault from "@/abi/Vault.json";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+
+interface ModalProps {
+  onClose: () => void;
+  vaultAddress: Address;
+  assetAddress: Address;
+}
+
+const SupplyFormModal: React.FC<ModalProps> = ({
+  onClose,
+  vaultAddress,
+  assetAddress,
+}) => {
+  const { address: userAddress } = useAccount();
+
+  let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
+
+  const [amount, setAmount] = useState<string>("");
+  const [needsApproval, setNeedsApproval] = useState<boolean>(true);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  const validateAndFormatAmount = (): bigint | null => {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      console.error("Invalid amount");
+      return null;
+    }
+
+    try {
+      return parseUnits(amount.toString(), token.decimals);
+    } catch (error) {
+      console.error("Error supplying token:", error);
+      return null;
+    }
+  };
+
+  // Fetch user allowance
+  const { data: allowance, isLoading: isLoadingAllowance } = useReadContract({
+    address: assetAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [userAddress!, vaultAddress],
+  });
+
+  useEffect(() => {
+    if (allowance !== undefined) {
+      console.log("allowance:", allowance);
+      console.log("form value:", Number(amount) * 10 ** token.decimals);
+      setNeedsApproval(
+        Number(allowance) == 0 ||
+          Number(allowance) < Number(amount) * 10 ** token.decimals
+      );
+    }
+  }, [allowance]);
+
+  const {
+    writeContract: writeApproveToken,
+    isPending: isApproving,
+    error: approveError,
+  } = useWriteContract();
+
+  const {
+    writeContract: writeSupplyToken,
+    isPending: isSupplying,
+    error: supplyError,
+  } = useWriteContract();
+
+  const approveToken = () => {
+    let formattedAmount = validateAndFormatAmount();
+    if (!formattedAmount) return;
+
+    writeApproveToken({
+      address: assetAddress,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [vaultAddress, formattedAmount],
+    });
+  };
+
+  const supplyToken = () => {
+    let formattedAmount = validateAndFormatAmount();
+    if (!formattedAmount) return;
+
+    writeSupplyToken({
+      address: vaultAddress,
+      abi: Vault.abi,
+      functionName: "supply",
+      args: [assetAddress, formattedAmount],
+    });
+  };
+
+  const handleAction = async () => {
+    let formattedAmount = validateAndFormatAmount();
+    if (!formattedAmount) return;
+
+    setIsProcessing(true);
+
+    if (needsApproval) {
+      approveToken();
+      setNeedsApproval(false);
+    } else {
+      supplyToken();
+    }
+
+    setIsProcessing(false);
+  };
+
+  return (
+    <div className="relative mx-auto w-full max-w-[24rem] rounded-lg overflow-hidden shadow-sm bg-white">
+      {/* Modal Header */}
+      <div className="relative flex items-center justify-center h-24 bg-slate-800 text-white">
+        <h3 className="text-2xl">Supply token</h3>
+      </div>
+
+      {/* FIXME: */}
+      <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        ✖
+      </button>
+
+      {/* Modal Body */}
+      <div className="flex flex-col gap-4 p-6">
+        <div className="w-full max-w-sm">
+          <label className="block mb-2 text-sm text-slate-600">Amount</label>
+          <input
+            type="number"
+            step="any"
+            min="0"
+            className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            // When click somewhere else, normalize value
+          />
+        </div>
+
+        {/* FIXME: */}
+      </div>
+
+      {/* Modal Footer */}
+      <div className="p-6 pt-0">
+        {needsApproval && (
+          <button
+            className={`w-full my-2 rounded-md py-2 px-4 text-white shadow-md 
+          ${
+            isProcessing || isApproving || isSupplying
+              ? "bg-slate-400 cursor-not-allowed"
+              : "bg-slate-800 hover:bg-slate-700"
+          }`}
+            type="button"
+            onClick={() => approveToken()}
+            disabled={isProcessing || isApproving || isLoadingAllowance}
+          >
+            {isProcessing ? "Processing approval..." : "Approve"}
+          </button>
+        )}
+
+        <button
+          className={`w-full rounded-md py-2 px-4 text-white shadow-md 
+          ${
+            isProcessing || isApproving || isSupplying || needsApproval
+              ? "bg-slate-400 cursor-not-allowed"
+              : "bg-slate-800 hover:bg-slate-700"
+          }`}
+          type="button"
+          onClick={() => handleAction()}
+          disabled={
+            isProcessing ||
+            isApproving ||
+            isSupplying ||
+            needsApproval ||
+            isLoadingAllowance
+          }
+        >
+          {isProcessing ? "Processing..." : "Supply"}
+        </button>
+        {/* <p>{error && error.message}</p> */}
+      </div>
+    </div>
+  );
+};
+
+export default SupplyFormModal;

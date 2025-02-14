@@ -23,11 +23,11 @@ const VaultPage: NextPage = () => {
       <main className="bg-gray-50 min-h-screen">
         {isValidAddress && (
           <>
-            <VaultDashboard />
+            <VaultDashboard vaultAddress={getAddress(vaultAddress as string)} />
 
-            <p>"some data"</p>
+            {/* <p>"some data"</p>
             <p>{contractData?.healthFactor}</p>
-            <p>{contractData?.availableBorrowsBase}</p>
+            <p>{contractData?.availableBorrowsBase}</p> */}
           </>
         )}
 

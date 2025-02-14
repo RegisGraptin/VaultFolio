@@ -2,14 +2,25 @@ import Image from "next/image";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, erc20Abi, formatUnits } from "viem";
 import { useBalance, useReadContracts } from "wagmi";
+import PopupButton from "../button/PopupButton";
+import SupplyFormModal from "./SupplyFormModal";
 
 // FIXME: See how can we adjust it based on the network
 // ie: dynamic adjusting based on network
 
 // Icon - https://app.aave.com/icons/tokens/wbtc.svg
 
-const RowDashboardAsset = ({ assetAddress }: { assetAddress: Address }) => {
-  const { data: userBalance } = useBalance({ address: assetAddress });
+const RowDashboardAsset = ({
+  vaultAddress,
+  assetAddress,
+}: {
+  vaultAddress: Address;
+  assetAddress: Address;
+}) => {
+  const { data: userBalance } = useBalance({
+    address: vaultAddress,
+    token: assetAddress,
+  });
 
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
@@ -74,6 +85,24 @@ const RowDashboardAsset = ({ assetAddress }: { assetAddress: Address }) => {
     return truncatedValue;
   };
 
+  // FIXME: Pop up Amount need to be selected / Asset / Quantity / value in dollars / APY / collaterization info / gas?
+
+  const supplyToken = () => {};
+
+  // FIXME: Invalid value for the WETH...
+
+  const SupplyButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+    <button
+      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
+                 focus:ring-blue-500 focus:ring-offset-2
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={`Supply ${token.name}`}
+      onClick={onClick}
+    >
+      Supply
+    </button>
+  );
+
   return (
     <>
       <div className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
@@ -106,19 +135,31 @@ const RowDashboardAsset = ({ assetAddress }: { assetAddress: Address }) => {
           )} */}
         </div>
 
-        {/* Balance Information */}
-        {userBalance && (
-          <div className="flex-shrink-0 ml-auto text-right">
-            <div className="font-mono text-base font-medium">
-              {formatBalance(userBalance.value, userBalance.decimals)}
-            </div>
-            {/* {userBalance.fiatValue && (
-              <div className="text-sm text-gray-500">
-                ${userBalance.fiatValue.toFixed(2)}
+        {/* Balance and Action Section */}
+        <div className="flex items-center gap-4 ml-auto">
+          {userBalance && (
+            <div className="text-right">
+              <div className="font-mono text-base font-medium">
+                {formatBalance(userBalance.value, userBalance.decimals)}
               </div>
-            )} */}
-          </div>
-        )}
+              {/* {userBalance.fiatValue && (
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  ${userBalance.fiatValue.toFixed(2)}
+                </div>
+              )} */}
+            </div>
+          )}
+
+          <PopupButton
+            ButtonComponent={SupplyButton}
+            ModalComponent={SupplyFormModal}
+            modalProps={{
+              vaultAddress,
+              assetAddress,
+            }}
+          />
+        </div>
+        {}
       </div>
     </>
   );

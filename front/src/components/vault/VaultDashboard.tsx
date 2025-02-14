@@ -1,12 +1,12 @@
 "use client";
 
-import { getAddress } from "viem";
+import { Address, getAddress } from "viem";
 import { useReadContract } from "wagmi";
 
 import AAVEPool from "@/abi/Pool.json";
 import RowDashboardAsset from "./RowAsset";
 
-const VaultDashboard = () => {
+const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
   // Get the available assets
   // FIXME::
 
@@ -22,17 +22,18 @@ const VaultDashboard = () => {
   return (
     <>
       <section className="container mx-auto py-16 px-4">
-        <h1>Vault information</h1>
+        <h1 className="text-4xl font-extrabold">Vault information</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="p-6 rounded-xl shadow-lg">
-            <h2>Your supplies</h2>
+            <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
             <div>
               {assetAddresses &&
                 assetAddresses.map((assetAddress: string, index: number) => {
                   return (
                     <RowDashboardAsset
                       key={index}
+                      vaultAddress={vaultAddress}
                       assetAddress={getAddress(assetAddress)}
                     />
                   );
