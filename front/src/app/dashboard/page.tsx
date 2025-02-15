@@ -17,9 +17,11 @@ const Dashboard: NextPage = () => {
   const { data: vaultAddresses, error } = useReadContract({
     address: getAddress(process.env.NEXT_PUBLIC_MANAGER_ADDRESS!),
     abi: Manager.abi,
-    functionName: "vaults",
+    functionName: "getVaults",
     args: [userAddress],
   });
+
+  console.log(vaultAddresses);
 
   return (
     <>
@@ -32,22 +34,24 @@ const Dashboard: NextPage = () => {
 
           <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {vaultAddresses &&
-              ((vaultAddress, index) => {
+              vaultAddresses.map((vaultAddress, index) => {
                 return (
-                  <>
-                    <Card
-                      title="Long Term"
-                      lendingValue={20000}
-                      borrowValue={0}
-                      lendingAPY={4.5}
-                      borrowAPY={0}
-                      healthRatio={100}
-                      strategies={["automation", "reinvest"]}
-                      color="green"
-                    />
-                  </>
+                  <Card
+                    key={index}
+                    vaultAddress={vaultAddress}
+                    title="Long Term" // FIXME: Need to store name on chain + color
+                    lendingValue={20000}
+                    borrowValue={0}
+                    lendingAPY={4.5}
+                    borrowAPY={0}
+                    healthRatio={100}
+                    strategies={["automation", "reinvest"]}
+                    color="green"
+                  />
                 );
               })}
+
+            {error && error.message}
 
             <Card
               title="Short Term"

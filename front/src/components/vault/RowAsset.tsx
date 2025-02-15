@@ -1,9 +1,11 @@
 import Image from "next/image";
-import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { Address, erc20Abi, formatUnits } from "viem";
-import { useBalance, useReadContracts } from "wagmi";
+import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import { Address, erc20Abi, formatUnits, getAddress } from "viem";
+import { useBalance, useReadContract, useReadContracts } from "wagmi";
 import PopupButton from "../button/PopupButton";
 import SupplyFormModal from "./SupplyFormModal";
+
+import AAVEPool from "@/abi/Pool.json";
 
 // FIXME: See how can we adjust it based on the network
 // ie: dynamic adjusting based on network
@@ -17,12 +19,68 @@ const RowDashboardAsset = ({
   vaultAddress: Address;
   assetAddress: Address;
 }) => {
-  const { data: userBalance } = useBalance({
+  let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
+  let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
+
+  console.log(lending_token);
+
+  // const { data: userBalanceToken } = useBalance({
+  //   address: vaultAddress,
+  //   token: assetAddress,
+  // });
+
+  const { data: vaultSupplyBalance } = useBalance({
     address: vaultAddress,
-    token: assetAddress,
+    token: lending_token.address,
   });
 
-  let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
+  // function getReserveData(address asset) external view returns (DataTypes.ReserveDataLegacy memory);
+
+  // const { data: reserveData, error } = useReadContract({
+  //   address: getAddress(process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL!),
+  //   abi: AAVEPool.abi,
+  //   functionName: "getReserveData",
+  //   args: [assetAddress],
+  // });
+
+  // if (reserveData) {
+  //   console.log(
+  //     `"${assetAddress}": { address: "${reserveData["aTokenAddress"]}"}`
+  //   );
+  // }
+
+  // let aToken = "0xD49d1CF2886B1c95A94e8a9066E8b298646716b6";
+
+  // const { data } = useReadContracts({
+  //   contracts: [
+  //     {
+  //       address: aToken,
+  //       abi: erc20Abi,
+  //       functionName: "name",
+  //     },
+  //     {
+  //       address: aToken,
+  //       abi: erc20Abi,
+  //       functionName: "symbol",
+  //     },
+  //     {
+  //       address: aToken,
+  //       abi: erc20Abi,
+  //       functionName: "decimals",
+  //     },
+  //   ],
+  // });
+  // console.log(data);
+
+  // if (data) {
+  //   console.log(`
+  // "${assetAddress}": {
+  //     name: "${data[0].result}",
+  //     symbol: "${data[1].result}",
+  //     decimals: ${data[2].result},
+  //   },
+  // `);
+  // }
 
   //   if (assetAddress in TOKEN_ASSETS) {
   //     token = TOKEN_ASSETS[assetAddress];
@@ -137,10 +195,13 @@ const RowDashboardAsset = ({
 
         {/* Balance and Action Section */}
         <div className="flex items-center gap-4 ml-auto">
-          {userBalance && (
+          {vaultSupplyBalance && (
             <div className="text-right">
               <div className="font-mono text-base font-medium">
-                {formatBalance(userBalance.value, userBalance.decimals)}
+                {formatBalance(
+                  vaultSupplyBalance.value,
+                  vaultSupplyBalance.decimals
+                )}
               </div>
               {/* {userBalance.fiatValue && (
                 <div className="text-sm text-gray-500 dark:text-gray-400">

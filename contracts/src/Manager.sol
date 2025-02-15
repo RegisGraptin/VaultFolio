@@ -17,4 +17,8 @@ contract Manager {
         emit VaultCreated(address(vault), msg.sender);
     }
 
+    function getVaults(address user) public view returns (address[] memory) {
+        return vaults[user];
+    }
+
 }
