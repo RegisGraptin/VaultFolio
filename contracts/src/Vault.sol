@@ -59,7 +59,8 @@ contract RepayStrategy is IStrategy {
 
 contract Vault is Ownable {
 
-    address immutable public AAVE_POOL_ADDRESS = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2; // FIXME:
+    // FIXME: Passed as parameter to easy changed between test and mainnet
+    address immutable public AAVE_POOL_ADDRESS = 0x48914C788295b5db23aF2b5F0B3BE775C4eA9440; // FIXME:
 
     uint16 immutable public REFERRAL_CODE = 0; // FIXME: visibility ?
 

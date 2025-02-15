@@ -1,12 +1,26 @@
+"use client";
+
 import Card from "@/components/dashboard/Card";
 import NewVaultCard from "@/components/dashboard/NewVaultCard";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { NextPage } from "next";
+import { getAddress } from "viem";
+import { useAccount, useReadContract } from "wagmi";
+import Manager from "@/abi/Manager.json";
 
 // TODO: fetch "getUserAccountData" function for each "vault"
 
 const Dashboard: NextPage = () => {
+  const { address: userAddress } = useAccount();
+
+  const { data: vaultAddresses, error } = useReadContract({
+    address: getAddress(process.env.NEXT_PUBLIC_MANAGER_ADDRESS!),
+    abi: Manager.abi,
+    functionName: "vaults",
+    args: [userAddress],
+  });
+
   return (
     <>
       <Header />
@@ -17,16 +31,24 @@ const Dashboard: NextPage = () => {
           </h1>
 
           <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <Card
-              title="Long Term"
-              lendingValue={20000}
-              borrowValue={0}
-              lendingAPY={4.5}
-              borrowAPY={0}
-              healthRatio={100}
-              strategies={["automation", "reinvest"]}
-              color="green"
-            />
+            {vaultAddresses &&
+              ((vaultAddress, index) => {
+                return (
+                  <>
+                    <Card
+                      title="Long Term"
+                      lendingValue={20000}
+                      borrowValue={0}
+                      lendingAPY={4.5}
+                      borrowAPY={0}
+                      healthRatio={100}
+                      strategies={["automation", "reinvest"]}
+                      color="green"
+                    />
+                  </>
+                );
+              })}
+
             <Card
               title="Short Term"
               lendingValue={10000}

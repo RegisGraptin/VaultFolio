@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Address, erc20Abi, parseUnits } from "viem";
+import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
 
 import Vault from "@/abi/Vault.json";
 import {
   useAccount,
+  useBalance,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -26,8 +27,12 @@ const SupplyFormModal: React.FC<ModalProps> = ({
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
-  const [needsApproval, setNeedsApproval] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  const { data: userBalance } = useBalance({
+    address: userAddress,
+    token: assetAddress,
+  });
 
   const validateAndFormatAmount = (): bigint | null => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -50,17 +55,6 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     functionName: "allowance",
     args: [userAddress!, vaultAddress],
   });
-
-  useEffect(() => {
-    if (allowance !== undefined) {
-      console.log("allowance:", allowance);
-      console.log("form value:", Number(amount) * 10 ** token.decimals);
-      setNeedsApproval(
-        Number(allowance) == 0 ||
-          Number(allowance) < Number(amount) * 10 ** token.decimals
-      );
-    }
-  }, [allowance]);
 
   const {
     writeContract: writeApproveToken,
@@ -90,6 +84,8 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     let formattedAmount = validateAndFormatAmount();
     if (!formattedAmount) return;
 
+    console.log(formattedAmount);
+
     writeSupplyToken({
       address: vaultAddress,
       abi: Vault.abi,
@@ -98,21 +94,44 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     });
   };
 
-  const handleAction = async () => {
-    let formattedAmount = validateAndFormatAmount();
-    if (!formattedAmount) return;
-
-    setIsProcessing(true);
-
-    if (needsApproval) {
-      approveToken();
-      setNeedsApproval(false);
-    } else {
-      supplyToken();
-    }
-
-    setIsProcessing(false);
+  const isApproveButtonDisabled = () => {
+    // Should be disabled if we do not have an input value
+    // If the input value is greater than the approval value
+    // If we are loading the value of the allowance
+    // console.log;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      !isNeedsApproval() ||
+      isProcessing ||
+      isApproving ||
+      isLoadingAllowance
+    );
   };
+
+  const isSupplyButtonDisabled = () => {
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      isProcessing ||
+      isApproving ||
+      isSupplying ||
+      isNeedsApproval() ||
+      isLoadingAllowance
+    );
+  };
+
+  const isNeedsApproval = () => {
+    if (allowance !== undefined) {
+      return (
+        Number(allowance) == 0 ||
+        Number(allowance) < Number(amount) * 10 ** token.decimals
+      );
+    }
+    return false;
+  };
+
+  // FIXME:: Handle update approval value
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-lg overflow-hidden shadow-sm bg-white">
@@ -142,22 +161,35 @@ const SupplyFormModal: React.FC<ModalProps> = ({
           />
         </div>
 
+        {/* Display user balance */}
+        <div className="w-full max-w-sm">
+          <label className="block mb-2 text-sm text-slate-600">
+            Your Balance
+          </label>
+          <p className="text-slate-700 text-sm">
+            {userBalance
+              ? formatUnits(userBalance.value, token.decimals)
+              : "Loading..."}{" "}
+            {token.symbol}
+          </p>
+        </div>
+
         {/* FIXME: */}
       </div>
 
       {/* Modal Footer */}
       <div className="p-6 pt-0">
-        {needsApproval && (
+        {isNeedsApproval() && (
           <button
             className={`w-full my-2 rounded-md py-2 px-4 text-white shadow-md 
           ${
-            isProcessing || isApproving || isSupplying
+            isApproveButtonDisabled()
               ? "bg-slate-400 cursor-not-allowed"
               : "bg-slate-800 hover:bg-slate-700"
           }`}
             type="button"
             onClick={() => approveToken()}
-            disabled={isProcessing || isApproving || isLoadingAllowance}
+            disabled={isApproveButtonDisabled()}
           >
             {isProcessing ? "Processing approval..." : "Approve"}
           </button>
@@ -166,23 +198,17 @@ const SupplyFormModal: React.FC<ModalProps> = ({
         <button
           className={`w-full rounded-md py-2 px-4 text-white shadow-md 
           ${
-            isProcessing || isApproving || isSupplying || needsApproval
+            isSupplyButtonDisabled()
               ? "bg-slate-400 cursor-not-allowed"
               : "bg-slate-800 hover:bg-slate-700"
           }`}
           type="button"
-          onClick={() => handleAction()}
-          disabled={
-            isProcessing ||
-            isApproving ||
-            isSupplying ||
-            needsApproval ||
-            isLoadingAllowance
-          }
+          onClick={() => supplyToken()}
+          disabled={isSupplyButtonDisabled()}
         >
           {isProcessing ? "Processing..." : "Supply"}
         </button>
-        {/* <p>{error && error.message}</p> */}
+        <p>{supplyError && supplyError.message}</p>
       </div>
     </div>
   );
