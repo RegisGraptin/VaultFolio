@@ -1,27 +1,38 @@
 "use client";
 
-import Card from "@/components/dashboard/Card";
+import VaultCard from "@/components/dashboard/VaultCard";
 import NewVaultCard from "@/components/dashboard/NewVaultCard";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { NextPage } from "next";
-import { getAddress } from "viem";
+import { Address, getAddress } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import Manager from "@/abi/Manager.json";
+import WalletDisconnected from "@/components/wallet/WalletDisconnected";
+import WalletConnecting from "@/components/wallet/WalletConnecting";
+import { AAVEPositionProvider } from "@/components/aave/AAVEPositionProvider";
 
-// TODO: fetch "getUserAccountData" function for each "vault"
+// Wallet Connecting Component
 
 const Dashboard: NextPage = () => {
-  const { address: userAddress } = useAccount();
+  const { address: userAddress, isConnected, status } = useAccount();
 
-  const { data: vaultAddresses, error } = useReadContract({
+  const { data: vaultAddresses = [] as Address[], error } = useReadContract({
     address: getAddress(process.env.NEXT_PUBLIC_MANAGER_ADDRESS!),
     abi: Manager.abi,
     functionName: "getVaults",
     args: [userAddress],
   });
 
-  console.log(vaultAddresses);
+  // Handle loading state while checking connection status
+  if (status === "connecting" || status === "reconnecting") {
+    return <WalletConnecting />;
+  }
+
+  // Handle disconnected state
+  if (!isConnected) {
+    return <WalletDisconnected />;
+  }
 
   return (
     <>
@@ -33,28 +44,10 @@ const Dashboard: NextPage = () => {
           </h1>
 
           <div className="grid gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {vaultAddresses &&
-              vaultAddresses.map((vaultAddress, index) => {
-                return (
-                  <Card
-                    key={index}
-                    vaultAddress={vaultAddress}
-                    title="Long Term" // FIXME: Need to store name on chain + color
-                    lendingValue={20000}
-                    borrowValue={0}
-                    lendingAPY={4.5}
-                    borrowAPY={0}
-                    healthRatio={100}
-                    strategies={["automation", "reinvest"]}
-                    color="green"
-                  />
-                );
-              })}
-
-            {error && error.message}
-
-            <Card
-              title="Short Term"
+            {/* Show user address */}
+            <VaultCard
+              vaultAddress={userAddress} // FIXME: See how to fix it
+              title="Wallet"
               lendingValue={10000}
               borrowValue={2000}
               lendingAPY={4.5}
@@ -63,18 +56,32 @@ const Dashboard: NextPage = () => {
               strategies={["automation", "reinvest"]}
               color="purple"
             />
-            <NewVaultCard />
 
-            {/* <Card 
-                            title="Pending Payments" 
-                            value={8230.50} 
-                            color="yellow" 
-                        />
-                        <Card 
-                            title="Projected Sales" 
-                            value={156789.00} 
-                            color="purple" 
-                        /> */}
+            {vaultAddresses &&
+              vaultAddresses.map((vaultAddress: Address, index: number) => {
+                return (
+                  <AAVEPositionProvider
+                    key={index}
+                    contractAddress={vaultAddress}
+                  >
+                    <VaultCard
+                      vaultAddress={vaultAddress}
+                      title="Long Term" // FIXME: Need to store name on chain + color
+                      lendingValue={20000}
+                      borrowValue={0}
+                      lendingAPY={4.5}
+                      borrowAPY={0}
+                      healthRatio={100}
+                      strategies={["automation", "reinvest"]}
+                      color="green"
+                    />
+                  </AAVEPositionProvider>
+                );
+              })}
+
+            {error && error.message}
+
+            <NewVaultCard />
           </div>
         </section>
       </main>

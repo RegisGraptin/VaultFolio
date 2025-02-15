@@ -1,6 +1,9 @@
-import Image from 'next/image'
+import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import Link from 'next/link';
+import Link from "next/link";
+
+// FIXME: Could we think of a side menu instead, showing directly all the vaults on the left side?
+// https://flowbite.com/docs/components/sidebar/
 
 export default function Header() {
   return (

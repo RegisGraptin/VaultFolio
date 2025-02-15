@@ -1,9 +1,13 @@
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaHeart, FaRobot, FaSync } from "react-icons/fa";
-import { Address } from "viem";
+import { Address, formatUnits } from "viem";
+import { useReadContract } from "wagmi";
+import Vault from "@/abi/Vault.json";
+import AAVEPool from "@/abi/Pool.json";
+import { useContractData } from "../aave/AAVEPositionProvider";
 
-interface CardProps {
+interface VaultCardProps {
   vaultAddress: Address;
   title: string;
   lendingValue: number;
@@ -15,10 +19,12 @@ interface CardProps {
   color?: "red" | "blue" | "green" | "purple" | "yellow";
 }
 
-const Card: React.FC<CardProps> = ({
+// TODO: fetch "getUserAccountData" function for each "vault"
+
+const VaultCard: React.FC<VaultCardProps> = ({
   vaultAddress,
   title,
-  lendingValue,
+  // lendingValue,
   borrowValue,
   lendingAPY,
   borrowAPY,
@@ -26,6 +32,28 @@ const Card: React.FC<CardProps> = ({
   strategies,
   color = "blue",
 }) => {
+  // Read vault data
+  // const { data: vaultData, error } = useReadContract({
+  //   address: vaultAddress,
+  //   abi: Vault.abi,
+  //   functionName: "",
+  //   args: [],
+  // });
+
+  const [lendingValue, setLendingValue] = useState<number>(0);
+  const accountData = useContractData();
+
+  useEffect(() => {
+    console.log("Vault data: ", vaultAddress);
+    console.log("READ data: ", accountData);
+
+    if (accountData !== undefined) {
+      const formattedCollateral = Number(accountData.totalCollateralBase) / 1e8;
+      setLendingValue(formattedCollateral);
+      console.log(`$${formattedCollateral.toFixed(2)} USD`);
+    }
+  }, [accountData]);
+
   const colorClasses = {
     red: "bg-red-100 text-red-800 border-red-300",
     blue: "bg-blue-100 text-blue-800 border-blue-300",
@@ -53,9 +81,7 @@ const Card: React.FC<CardProps> = ({
 
         <div className="flex justify-between items-center w-full mb-3">
           <div className="text-green-500">
-            <p className="text-lg font-semibold">
-              ${lendingValue.toLocaleString()}
-            </p>
+            <p className="text-lg font-semibold">${lendingValue.toFixed(2)}</p>
             <p className="text-sm text-gray-500">Lending</p>
           </div>
           <div className="text-red-500">
@@ -92,4 +118,4 @@ const Card: React.FC<CardProps> = ({
   );
 };
 
-export default Card;
+export default VaultCard;

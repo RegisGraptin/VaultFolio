@@ -60,6 +60,7 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     writeContract: writeApproveToken,
     isPending: isApproving,
     error: approveError,
+    isSuccess: isApproved,
   } = useWriteContract();
 
   const {

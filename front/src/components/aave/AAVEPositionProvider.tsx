@@ -1,17 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 
 import AAVEPool from "@/abi/Pool.json";
 import { Address } from "viem";
-
-// uint256 totalCollateralBase,
-// uint256 totalDebtBase,
-// uint256 availableBorrowsBase,
-// uint256 currentLiquidationThreshold,
-// uint256 ltv,
-// uint256 healthFactor
 
 interface UserAccountData {
   totalCollateralBase: bigint;
@@ -33,6 +26,8 @@ export function AAVEPositionProvider({
   contractAddress: Address;
   children: React.ReactNode;
 }) {
+  const [accountData, setAccountData] = useState<UserAccountData>();
+
   const { data, refetch, error } = useReadContract({
     address: process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL as Address,
     abi: AAVEPool.abi,
@@ -40,38 +35,38 @@ export function AAVEPositionProvider({
     args: [contractAddress],
   });
 
-  // FIXME: manage the case where no instance has been created yet!
-
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 180_000); // Adjust the interval as needed (e.g., 10000 ms for 10 seconds)
+    }, 180_000);
 
     return () => clearInterval(interval);
   }, [refetch]);
 
-  // FIXME: chekc or better solution
-  //   const parsedData = data
-  //     ? {
-  //         totalCollateralETH: data[0],
-  //         totalDebtETH: data[1],
-  //         availableBorrowsETH: data[2],
-  //         currentLiquidationThreshold: data[3],
-  //         ltv: data[4],
-  //         healthFactor: data[5],
-  //       }
-  //     : null;
+  useEffect(() => {
+    if (!data) return;
 
-  // FIXME: Need to do smth?
-  // console.log("data fetch");
-  // console.log(data);
-  // console.log(contractAddress);
+    const [
+      totalCollateralBase,
+      totalDebtBase,
+      availableBorrowsBase,
+      currentLiquidationThreshold,
+      ltv,
+      healthFactor,
+    ] = data as bigint[];
 
-  // console.log("error data");
-  // console.log(error);
+    setAccountData({
+      totalCollateralBase,
+      totalDebtBase,
+      availableBorrowsBase,
+      currentLiquidationThreshold,
+      ltv,
+      healthFactor,
+    });
+  }, [data]);
 
   return (
-    <ContractDataContext.Provider value={data as UserAccountData}>
+    <ContractDataContext.Provider value={accountData}>
       {children}
     </ContractDataContext.Provider>
   );

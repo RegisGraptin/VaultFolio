@@ -15,7 +15,7 @@ const VaultPage: NextPage = () => {
 
   const contractData = useContractData();
 
-  console.log(contractData);
+  console.log("Contract Data:", contractData);
 
   return (
     <>
