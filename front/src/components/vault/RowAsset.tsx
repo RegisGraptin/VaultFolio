@@ -1,11 +1,9 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, erc20Abi, formatUnits, getAddress } from "viem";
-import { useBalance, useReadContract, useReadContracts } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import PopupButton from "../button/PopupButton";
 import SupplyFormModal from "./SupplyFormModal";
-
-import AAVEPool from "@/abi/Pool.json";
 
 // FIXME: See how can we adjust it based on the network
 // ie: dynamic adjusting based on network
@@ -19,15 +17,17 @@ const RowDashboardAsset = ({
   vaultAddress: Address;
   assetAddress: Address;
 }) => {
+  const { address: userAddress } = useAccount();
+
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
 
   console.log(lending_token);
 
-  // const { data: userBalanceToken } = useBalance({
-  //   address: vaultAddress,
-  //   token: assetAddress,
-  // });
+  const { data: userBalanceToken } = useBalance({
+    address: userAddress,
+    token: assetAddress,
+  });
 
   const { data: vaultSupplyBalance } = useBalance({
     address: vaultAddress,
@@ -186,11 +186,12 @@ const RowDashboardAsset = ({
           </div>
 
           {/* Optional Metadata */}
-          {/* {token.description && (
+          {userBalanceToken && (
             <p className="text-sm text-gray-600 truncate">
-              {token.description}
+              Available:{" "}
+              {formatBalance(userBalanceToken.value, userBalanceToken.decimals)}
             </p>
-          )} */}
+          )}
         </div>
 
         {/* Balance and Action Section */}
@@ -203,6 +204,7 @@ const RowDashboardAsset = ({
                   vaultSupplyBalance.decimals
                 )}
               </div>
+              {/* FIXME: Put value in dollars */}
               {/* {userBalance.fiatValue && (
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   ${userBalance.fiatValue.toFixed(2)}

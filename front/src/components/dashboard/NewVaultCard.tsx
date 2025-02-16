@@ -7,6 +7,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 import Manager from "@/abi/Manager.json";
 import { useRouter } from "next/navigation";
+import LoadingButton from "../button/LoadingButton";
 
 interface VaultCreatedEvent {
   vault: string;
@@ -55,7 +56,7 @@ const NewVaultCard = () => {
   }
 
   useEffect(() => {
-    if (txReceipt === undefined) {
+    if (!isConfirmed && txReceipt === undefined) {
       return;
     }
 
@@ -158,13 +159,12 @@ const NewVaultCard = () => {
 
             {/* Modal Footer */}
             <div className="p-6 pt-0">
-              <button
-                className="w-full rounded-md bg-slate-800 py-2 px-4 text-white shadow-md hover:bg-slate-700"
-                type="button"
+              <LoadingButton
+                isLoading={txIsPending || isConfirming}
                 onClick={() => createNewVault()}
               >
                 Create
-              </button>
+              </LoadingButton>
               <p>{error && error.message}</p>
             </div>
           </div>
