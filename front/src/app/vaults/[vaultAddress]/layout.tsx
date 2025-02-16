@@ -6,7 +6,7 @@ export default async function VaultLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { vaultAddress: string };
+  params: Promise<{ vaultAddress: string }>;
 }) {
   // FIXME: address can be undefined
 

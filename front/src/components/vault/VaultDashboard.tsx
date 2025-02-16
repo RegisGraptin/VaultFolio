@@ -28,16 +28,18 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
           <div className="p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
             <div>
-              {assetAddresses &&
-                assetAddresses.map((assetAddress: string, index: number) => {
-                  return (
-                    <RowDashboardAsset
-                      key={index}
-                      vaultAddress={vaultAddress}
-                      assetAddress={getAddress(assetAddress)}
-                    />
-                  );
-                })}
+              {(assetAddresses as Address[]) &&
+                (assetAddresses as Address[]).map(
+                  (assetAddress: string, index: number) => {
+                    return (
+                      <RowDashboardAsset
+                        key={index}
+                        vaultAddress={vaultAddress}
+                        assetAddress={getAddress(assetAddress)}
+                      />
+                    );
+                  }
+                )}
 
               {error?.message}
             </div>

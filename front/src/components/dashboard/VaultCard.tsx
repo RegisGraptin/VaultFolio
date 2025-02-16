@@ -11,7 +11,6 @@ import { useVault } from "@/utils/hook/vault";
 
 interface VaultCardProps {
   vaultAddress: Address;
-  title: string;
   lendingValue: number;
   borrowValue: number;
   lendingAPY: number;
@@ -25,7 +24,6 @@ interface VaultCardProps {
 
 const VaultCard: React.FC<VaultCardProps> = ({
   vaultAddress,
-  title,
   // lendingValue,
   borrowValue,
   lendingAPY,
