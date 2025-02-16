@@ -6,6 +6,8 @@ import { useReadContract } from "wagmi";
 import Vault from "@/abi/Vault.json";
 import AAVEPool from "@/abi/Pool.json";
 import { useContractData } from "../aave/AAVEPositionProvider";
+import { getVaultColor, VAULT_COLORS } from "@/utils/vault/colors";
+import { useVault } from "@/utils/hook/vault";
 
 interface VaultCardProps {
   vaultAddress: Address;
@@ -33,20 +35,13 @@ const VaultCard: React.FC<VaultCardProps> = ({
   color = "blue",
 }) => {
   // Read vault data
-  // const { data: vaultData, error } = useReadContract({
-  //   address: vaultAddress,
-  //   abi: Vault.abi,
-  //   functionName: "",
-  //   args: [],
-  // });
+  const { data: vaultName } = useVault(vaultAddress, "name");
+  const { data: vaultColorIndex } = useVault(vaultAddress, "color");
 
   const [lendingValue, setLendingValue] = useState<number>(0);
   const accountData = useContractData();
 
   useEffect(() => {
-    console.log("Vault data: ", vaultAddress);
-    console.log("READ data: ", accountData);
-
     if (accountData !== undefined) {
       const formattedCollateral = Number(accountData.totalCollateralBase) / 1e8;
       setLendingValue(formattedCollateral);
@@ -54,29 +49,18 @@ const VaultCard: React.FC<VaultCardProps> = ({
     }
   }, [accountData]);
 
-  const colorClasses = {
-    red: "bg-red-100 text-red-800 border-red-300",
-    blue: "bg-blue-100 text-blue-800 border-blue-300",
-    green: "bg-green-100 text-green-800 border-green-300",
-    purple: "bg-purple-100 text-purple-800 border-purple-300",
-    yellow: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  };
-
   const shadowIntensity =
     healthRatio < 1.5 ? "shadow-red-500" : "shadow-green-500";
   const heartColor = healthRatio < 1.5 ? "text-red-500" : "text-green-500";
 
-  // FIXME: Search name and color here
-  // FIXME: Need to think to adjust it if wallet!
-
   return (
     <Link href={`/vaults/${vaultAddress}`}>
       <div
-        className={`relative w-full max-w-sm p-6 rounded-xl border-2 ${colorClasses[color]} 
+        className={`relative w-full max-w-sm p-6 rounded-xl border-2 ${getVaultColor(vaultColorIndex as number)} 
       transition-all hover:shadow-lg text-center shadow-md ${shadowIntensity}`}
       >
         <h3 className="text-xl font-semibold uppercase tracking-wide mb-3">
-          {title}
+          {vaultName ? (vaultName as string) : "Wallet"}
         </h3>
 
         <div className="flex justify-between items-center w-full mb-3">

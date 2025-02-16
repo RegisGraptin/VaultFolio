@@ -11,8 +11,11 @@ contract Manager {
 
     constructor() {}
 
-    function createVault() public {
-        Vault vault = new Vault(msg.sender);
+    function createVault(
+        uint8 color, 
+        string memory name
+    ) public {
+        Vault vault = new Vault(msg.sender, color, name);
         vaults[msg.sender].push(address(vault));
         emit VaultCreated(address(vault), msg.sender);
     }

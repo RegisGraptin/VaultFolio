@@ -64,7 +64,17 @@ contract Vault is Ownable {
 
     uint16 immutable public REFERRAL_CODE = 0; // FIXME: visibility ?
 
-    constructor(address owner) Ownable(owner) {}
+    uint8 public color;
+    string public name;
+    
+    constructor(
+        address owner,
+        uint8 _color,
+        string memory _name
+    ) Ownable(owner) {
+        color = _color;
+        name = _name;
+    }
 
 
     // FIXME: Need to think how to manage startegy id --> 1? 

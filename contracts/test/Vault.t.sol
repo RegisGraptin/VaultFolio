@@ -25,7 +25,7 @@ contract VaultTest is Test {
     function setUp() public {
         vm.createSelectFork('https://rpc.ankr.com/eth');
 
-        vault = new Vault(user); // FIXME: should it be 'msg.sender' instead ?
+        vault = new Vault(user, 1, "Test"); // FIXME: should it be 'msg.sender' instead ?
     }
 
     function test_Supply() public {

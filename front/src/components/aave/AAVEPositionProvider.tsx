@@ -72,6 +72,7 @@ export function AAVEPositionProvider({
   );
 }
 
+// FIXME: TBRename to understand it comes from AAVE
 export function useContractData() {
   return useContext(ContractDataContext);
 }

@@ -8,6 +8,7 @@ import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import Manager from "@/abi/Manager.json";
 import { useRouter } from "next/navigation";
 import LoadingButton from "../button/LoadingButton";
+import { VAULT_COLORS } from "@/utils/vault/colors";
 
 interface VaultCreatedEvent {
   vault: string;
@@ -25,8 +26,7 @@ const NewVaultCard = () => {
     if (e.target === e.currentTarget) setOpen(false);
   };
 
-  const colors = ["red", "blue", "green", "purple", "yellow"];
-  const [selectedColor, setSelectedColor] = useState(colors[0]);
+  const [selectedColor, setSelectedColor] = useState(VAULT_COLORS[0]);
 
   const {
     data: hash,
@@ -44,6 +44,8 @@ const NewVaultCard = () => {
   });
 
   function createNewVault() {
+    const colorIndex = VAULT_COLORS.indexOf(selectedColor);
+
     console.log("Create a new vault: '" + vaultName + "' - " + selectedColor);
     console.log(error);
 
@@ -51,7 +53,7 @@ const NewVaultCard = () => {
       address: process.env.NEXT_PUBLIC_MANAGER_ADDRESS as Address,
       abi: Manager.abi,
       functionName: "createVault",
-      args: [],
+      args: [colorIndex, vaultName],
     });
   }
 
@@ -140,7 +142,7 @@ const NewVaultCard = () => {
                   Choose a Color
                 </label>
                 <div className="flex justify-center gap-3">
-                  {colors.map((color) => {
+                  {VAULT_COLORS.map((color) => {
                     return (
                       <div
                         key={color}
