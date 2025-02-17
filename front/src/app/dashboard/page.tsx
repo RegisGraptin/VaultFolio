@@ -12,12 +12,10 @@ import WalletDisconnected from "@/components/wallet/WalletDisconnected";
 import WalletConnecting from "@/components/wallet/WalletConnecting";
 import { AAVEPositionProvider } from "@/components/aave/AAVEPositionProvider";
 
-// Wallet Connecting Component
-
 const Dashboard: NextPage = () => {
   const { address: userAddress, isConnected, status } = useAccount();
 
-  const { data: vaultAddresses = [], error } = useReadContract({
+  const { data: vaultAddresses = [] } = useReadContract({
     address: getAddress(process.env.NEXT_PUBLIC_MANAGER_ADDRESS!),
     abi: Manager.abi,
     functionName: "getVaults",
@@ -55,7 +53,6 @@ const Dashboard: NextPage = () => {
                 borrowAPY={3.5}
                 healthRatio={2}
                 strategies={["automation", "reinvest"]}
-                color="purple"
               />
             </AAVEPositionProvider>
 
@@ -75,7 +72,6 @@ const Dashboard: NextPage = () => {
                         borrowAPY={0}
                         healthRatio={100}
                         strategies={["automation", "reinvest"]}
-                        color="green"
                       />
                     </AAVEPositionProvider>
                   );

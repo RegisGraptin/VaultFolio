@@ -4,23 +4,27 @@ export default function LoadingButton({
   children,
   isLoading,
   onClick,
+  className,
+  disabled,
   ...props
 }: {
   children: ReactNode;
   isLoading: boolean;
   onClick: () => void;
+  className?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       {...props}
-      className={`w-full rounded-md bg-slate-800 py-2 px-4 text-white shadow-md transition-all ${
-        isLoading
-          ? "cursor-not-allowed opacity-75 hover:bg-slate-800"
-          : "hover:bg-slate-700"
+      className={`${className} ${
+        disabled || isLoading
+          ? "!bg-gray-400 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
       }`}
       type="button"
       onClick={onClick}
-      disabled={isLoading}
+      disabled={disabled || isLoading}
     >
       {isLoading ? (
         <div className="flex items-center justify-center gap-2">

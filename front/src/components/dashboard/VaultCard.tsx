@@ -17,7 +17,6 @@ interface VaultCardProps {
   borrowAPY: number;
   healthRatio: number;
   strategies: string[];
-  color?: "red" | "blue" | "green" | "purple" | "yellow";
 }
 
 // TODO: fetch "getUserAccountData" function for each "vault"
@@ -30,7 +29,6 @@ const VaultCard: React.FC<VaultCardProps> = ({
   borrowAPY,
   healthRatio,
   strategies,
-  color = "blue",
 }) => {
   // Read vault data
   const { data: vaultName } = useVault(vaultAddress, "name");

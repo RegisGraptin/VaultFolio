@@ -1,14 +1,26 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, erc20Abi, formatUnits, getAddress } from "viem";
-import { useAccount, useBalance } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useEstimateFeesPerGas,
+  useReadContract,
+} from "wagmi";
 import PopupButton from "../button/PopupButton";
 import SupplyFormModal from "./SupplyFormModal";
+
+import IPoolAddressesProvider from "@/abi/IPoolAddressesProvider.json";
+import IPriceOracle from "@/abi/IPriceOracleGetter.json";
+import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 
 // FIXME: See how can we adjust it based on the network
 // ie: dynamic adjusting based on network
 
 // Icon - https://app.aave.com/icons/tokens/wbtc.svg
+
+const ORACLE_PRICE_DECIMALS = 8;
 
 const RowDashboardAsset = ({
   vaultAddress,
@@ -22,8 +34,6 @@ const RowDashboardAsset = ({
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
 
-  console.log(lending_token);
-
   const { data: userBalanceToken } = useBalance({
     address: userAddress,
     token: assetAddress,
@@ -33,6 +43,17 @@ const RowDashboardAsset = ({
     address: vaultAddress,
     token: lending_token.address,
   });
+
+  const { data: addressPriceOracle } = useOracle("getPriceOracle");
+
+  const { data: oraclePriceUSD } = usePriceOracle(
+    addressPriceOracle,
+    "getAssetPrice",
+    [getAddress(assetAddress)]
+  );
+
+  // console.log("addressPriceOracle: ", addressPriceOracle);
+  // console.log("oracleAssetPrice: ", oraclePriceUSD);
 
   // function getReserveData(address asset) external view returns (DataTypes.ReserveDataLegacy memory);
 
@@ -128,26 +149,14 @@ const RowDashboardAsset = ({
   //   }
 
   // FIXME: to much for nothin I guess --> Need to simplify it!
-  const formatBalance = (value?: bigint, decimals?: number) => {
-    if (!value || decimals === undefined) return "0";
-
-    const formattedValue = formatUnits(value, decimals);
-    const [integerPart, decimalPart] = formattedValue.split(".");
-
-    // Show only the last 4 decimals
-    const truncatedDecimalPart = decimalPart ? decimalPart.slice(-4) : "";
-    const truncatedValue = truncatedDecimalPart
-      ? `${integerPart}.${truncatedDecimalPart}`
-      : integerPart;
-
-    return truncatedValue;
-  };
 
   // FIXME: Pop up Amount need to be selected / Asset / Quantity / value in dollars / APY / collaterization info / gas?
 
   const supplyToken = () => {};
 
   // FIXME: Invalid value for the WETH...
+
+  useEstimateFeesPerGas();
 
   const SupplyButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     <button
@@ -156,6 +165,7 @@ const RowDashboardAsset = ({
                  disabled:opacity-50 disabled:cursor-not-allowed"
       aria-label={`Supply ${token.name}`}
       onClick={onClick}
+      disabled={userBalanceToken?.value === BigInt(0)}
     >
       Supply
     </button>
@@ -184,14 +194,58 @@ const RowDashboardAsset = ({
               <span className="text-sm text-gray-500">{token.symbol}</span>
             )}
           </div>
-
-          {/* Optional Metadata */}
+          {/* // In your component where you have the balance display: */}
           {userBalanceToken && (
-            <p className="text-sm text-gray-600 truncate">
-              Available:{" "}
-              {formatBalance(userBalanceToken.value, userBalanceToken.decimals)}
-            </p>
+            <div className="group/tooltip relative inline-block">
+              {" "}
+              {/* Added tooltip scope */}
+              <p className="text-sm text-gray-600 truncate">
+                Available:{" "}
+                {formatBalance(
+                  userBalanceToken.value,
+                  userBalanceToken.decimals
+                )}
+              </p>
+              {/* Tooltip */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 px-2 py-1 text-xs text-white bg-gray-800 rounded-md transition-opacity duration-200 group-hover/tooltip:opacity-100">
+                {oraclePriceUSD
+                  ? `$${convertAssetToUSD(
+                      userBalanceToken.value,
+                      userBalanceToken.decimals,
+                      oraclePriceUSD as bigint,
+                      ORACLE_PRICE_DECIMALS
+                    )} USD`
+                  : "USD price unavailable"}
+                {/* Tooltip arrow */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-800 rotate-45" />
+              </div>
+            </div>
           )}
+
+          {/* Optional Metadata
+          {userBalanceToken && (
+            <>
+              <p
+                data-tooltip-target="tooltip-default"
+                className="text-sm text-gray-600 truncate"
+              >
+                Available:{" "}
+                {formatBalance(
+                  userBalanceToken.value,
+                  userBalanceToken.decimals
+                )}
+              </p>
+
+              <div
+                id="tooltip-default"
+                role="tooltip"
+                className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700"
+              >
+                Tooltip content
+                <div className="tooltip-arrow" data-popper-arrow></div>
+              </div>
+            </>
+          )} */}
         </div>
 
         {/* Balance and Action Section */}
@@ -222,7 +276,6 @@ const RowDashboardAsset = ({
             }}
           />
         </div>
-        {}
       </div>
     </>
   );

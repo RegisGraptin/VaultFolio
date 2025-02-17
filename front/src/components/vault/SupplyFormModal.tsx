@@ -1,15 +1,19 @@
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { Address, erc20Abi, formatUnits, parseUnits } from "viem";
+import { Address, erc20Abi, formatUnits, getAddress, parseUnits } from "viem";
 
 import Vault from "@/abi/Vault.json";
 import {
   useAccount,
   useBalance,
   useReadContract,
-  useWaitForTransactionReceipt,
+  useSimulateContract,
   useWriteContract,
 } from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import LoadingButton from "../button/LoadingButton";
+import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import { convertAssetToUSD } from "@/utils/tokens/balance";
 
 interface ModalProps {
   onClose: () => void;
@@ -33,6 +37,14 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     address: userAddress,
     token: assetAddress,
   });
+
+  const { data: addressPriceOracle } = useOracle("getPriceOracle");
+
+  const { data: oraclePriceUSD } = usePriceOracle(
+    addressPriceOracle,
+    "getAssetPrice",
+    [getAddress(assetAddress)]
+  );
 
   const validateAndFormatAmount = (): bigint | null => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -95,6 +107,13 @@ const SupplyFormModal: React.FC<ModalProps> = ({
     });
   };
 
+  const { data: simulateContract } = useSimulateContract({
+    address: assetAddress,
+    abi: erc20Abi,
+    functionName: "approve",
+    args: [vaultAddress, BigInt(10)], // FIXME:
+  });
+
   const isApproveButtonDisabled = () => {
     // Should be disabled if we do not have an input value
     // If the input value is greater than the approval value
@@ -135,81 +154,152 @@ const SupplyFormModal: React.FC<ModalProps> = ({
   // FIXME:: Handle update approval value
 
   return (
-    <div className="relative mx-auto w-full max-w-[24rem] rounded-lg overflow-hidden shadow-sm bg-white">
-      {/* Modal Header */}
-      <div className="relative flex items-center justify-center h-24 bg-slate-800 text-white">
-        <h3 className="text-2xl">Supply token</h3>
-      </div>
-
-      {/* FIXME: */}
-      <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-        ✖
-      </button>
-
-      {/* Modal Body */}
-      <div className="flex flex-col gap-4 p-6">
-        <div className="w-full max-w-sm">
-          <label className="block mb-2 text-sm text-slate-600">Amount</label>
-          <input
-            type="number"
-            step="any"
-            min="0"
-            className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            // When click somewhere else, normalize value
-          />
-        </div>
-
-        {/* Display user balance */}
-        <div className="w-full max-w-sm">
-          <label className="block mb-2 text-sm text-slate-600">
-            Your Balance
-          </label>
-          <p className="text-slate-700 text-sm">
-            {userBalance
-              ? formatUnits(userBalance.value, token.decimals)
-              : "Loading..."}{" "}
-            {token.symbol}
-          </p>
-        </div>
-
-        {/* FIXME: */}
-      </div>
-
-      {/* Modal Footer */}
-      <div className="p-6 pt-0">
-        {isNeedsApproval() && (
+    <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
+      {/* Header */}
+      <div className="relative px-6 pt-6 pb-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Supply {token.symbol}
+          </h2>
           <button
-            className={`w-full my-2 rounded-md py-2 px-4 text-white shadow-md 
-          ${
-            isApproveButtonDisabled()
-              ? "bg-slate-400 cursor-not-allowed"
-              : "bg-slate-800 hover:bg-slate-700"
-          }`}
-            type="button"
-            onClick={() => approveToken()}
-            disabled={isApproveButtonDisabled()}
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500 transition-colors"
           >
-            {isProcessing ? "Processing approval..." : "Approve"}
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
-        )}
+        </div>
+      </div>
 
-        <button
-          className={`w-full rounded-md py-2 px-4 text-white shadow-md 
-          ${
-            isSupplyButtonDisabled()
-              ? "bg-slate-400 cursor-not-allowed"
-              : "bg-slate-800 hover:bg-slate-700"
-          }`}
-          type="button"
-          onClick={() => supplyToken()}
-          disabled={isSupplyButtonDisabled()}
-        >
-          {isProcessing ? "Processing..." : "Supply"}
-        </button>
-        <p>{supplyError && supplyError.message}</p>
+      {/* Main Content */}
+      <div className="px-6 pb-6">
+        {/* Amount Input */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-500">Amount</span>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Wallet balance</span>
+              <span className="text-sm font-medium text-gray-700">
+                {userBalance
+                  ? formatUnits(userBalance.value, token.decimals)
+                  : "0.00"}
+              </span>
+              <button
+                onClick={() =>
+                  setAmount(formatUnits(userBalance!.value, token.decimals))
+                }
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Max
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-gray-300 focus-within:border-blue-500 transition-colors">
+            <input
+              type="number"
+              step="any"
+              min="0"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full bg-transparent text-xl font-medium text-gray-900 focus:outline-none"
+            />
+            <div className="flex items-center space-x-2 mr-2">
+              <Image
+                src={`/images/tokens/${token.symbol.toLowerCase()}.svg`}
+                alt={`${token.symbol} icon`}
+                className="h-6 w-6"
+                width={24}
+                height={24}
+              />
+              <span className="font-medium text-gray-700">{token.symbol}</span>
+            </div>
+          </div>
+
+          <div className="mt-2 text-right text-sm text-gray-500">
+            ≈ $
+            {userBalance && oraclePriceUSD && amount
+              ? `${convertAssetToUSD(parseUnits(amount, userBalance.decimals), userBalance.decimals, oraclePriceUSD as bigint)}`
+              : "0.00"}{" "}
+            USD
+          </div>
+        </div>
+
+        {/* Transaction Details */}
+        <div className="mb-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">Supply APY</span>
+            <span className="font-medium text-gray-700">0%</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">Collateralization</span>
+            <span className="text-green-600 font-medium">Enabled</span>
+          </div>
+        </div>
+
+        {/* Gas Estimation */}
+        <div className="mb-6 flex items-center text-sm text-gray-500">
+          <svg
+            className="w-4 h-4 mr-1 text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Gas fee: $0.00 {/* Add actual gas estimation here */}
+          {simulateContract && simulateContract.request.gasPrice}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {isNeedsApproval() && (
+            <LoadingButton
+              isLoading={isApproving}
+              onClick={() => approveToken()}
+              className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
+              disabled={isApproveButtonDisabled()}
+            >
+              {isProcessing ? "Approving..." : "Approve"}
+            </LoadingButton>
+          )}
+
+          <button
+            onClick={() => supplyToken()}
+            disabled={isSupplyButtonDisabled()}
+            className={`w-full py-3 rounded-xl text-white font-medium transition-colors ${
+              isSupplyButtonDisabled()
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {isProcessing ? "Processing..." : "Supply"}
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {supplyError && (
+          <div className="mt-4 text-center text-sm text-red-600">
+            {supplyError.message}
+          </div>
+        )}
       </div>
     </div>
   );
