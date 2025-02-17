@@ -58,30 +58,30 @@ const Dashboard: NextPage = () => {
                 color="purple"
               />
             </AAVEPositionProvider>
-            <div>
-              {(vaultAddresses as Address[]) &&
-                (vaultAddresses as Address[]).map(
-                  (vaultAddress: Address, index: number) => {
-                    return (
-                      <AAVEPositionProvider
-                        key={index}
-                        contractAddress={vaultAddress}
-                      >
-                        <VaultCard
-                          vaultAddress={vaultAddress}
-                          lendingValue={20000}
-                          borrowValue={0}
-                          lendingAPY={4.5}
-                          borrowAPY={0}
-                          healthRatio={100}
-                          strategies={["automation", "reinvest"]}
-                          color="green"
-                        />
-                      </AAVEPositionProvider>
-                    );
-                  }
-                )}
-            </div>
+
+            {(vaultAddresses as Address[]) &&
+              (vaultAddresses as Address[]).map(
+                (vaultAddress: Address, index: number) => {
+                  return (
+                    <AAVEPositionProvider
+                      key={index}
+                      contractAddress={vaultAddress}
+                    >
+                      <VaultCard
+                        vaultAddress={vaultAddress}
+                        lendingValue={20000}
+                        borrowValue={0}
+                        lendingAPY={4.5}
+                        borrowAPY={0}
+                        healthRatio={100}
+                        strategies={["automation", "reinvest"]}
+                        color="green"
+                      />
+                    </AAVEPositionProvider>
+                  );
+                }
+              )}
+
             {/* {error && error.message} */}
             <NewVaultCard />
           </div>
