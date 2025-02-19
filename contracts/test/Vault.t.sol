@@ -12,7 +12,7 @@ contract VaultTest is Test {
     Vault public vault;
 
     // Mainnet Aave V3 Pool Address
-    IPool public pool = IPool(0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2);
+    address immutable public AAVE_POOL_ADDRESS = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
     
     // Test user
     address public user = makeAddr('user');
@@ -25,7 +25,7 @@ contract VaultTest is Test {
     function setUp() public {
         vm.createSelectFork('https://rpc.ankr.com/eth');
 
-        vault = new Vault(user, 1, "Test"); // FIXME: should it be 'msg.sender' instead ?
+        vault = new Vault(AAVE_POOL_ADDRESS, user, 1, 'Test');
     }
 
     function test_Supply() public {
@@ -61,6 +61,31 @@ contract VaultTest is Test {
         
         uint256 usdcBalance = usdc.balanceOf(user);
         assertEq(usdcBalance, supplyAmount, 'USDC balance should be equals to the supply amount');
+        vm.stopPrank();
+    }
+
+    function test_Borrow() public {
+        uint256 supplyAmount = 1000 * 1e6; // USDC has 6 decimals
+        deal(address(usdc), user, supplyAmount);
+
+        // Step 2: Approve Aave Pool to spend USDC
+        vm.startPrank(user);
+        usdc.approve(address(vault), supplyAmount);
+
+        // Step 3: Supply USDC to Aave
+        vault.supply(address(usdc), supplyAmount);
+
+        // Step 4: The vault balance of uscd should be empty as we changed it to aUSDC
+        uint256 usdcBalance = usdc.balanceOf(address(vault));
+        assertEq(usdcBalance, 0, 'USDC balance of the vault should empty.');
+
+        // Step 5: Borrow USDC from Aave
+        uint256 borrowAmount = 1 * 1e6; // USDC has 6 decimals
+        vault.borrow(address(usdc), borrowAmount, 2); // FIXME: Remove this paramter
+
+        // Step 6: Check the user’s USDC balance
+        usdcBalance = usdc.balanceOf(address(vault));
+        assertEq(usdcBalance, borrowAmount, 'USDC balance should be equals to the supply and borrow amount');
         vm.stopPrank();
     }
 

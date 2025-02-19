@@ -9,13 +9,17 @@ contract Manager {
 
     event VaultCreated(address vault, address user);
 
-    constructor() {}
+    address immutable public AAVE_POOL_ADDRESS;
 
+    constructor(address _aave_pool) {
+        AAVE_POOL_ADDRESS = _aave_pool;
+    }
+    
     function createVault(
         uint8 color, 
         string memory name
     ) public {
-        Vault vault = new Vault(msg.sender, color, name);
+        Vault vault = new Vault(AAVE_POOL_ADDRESS, msg.sender, color, name);
         vaults[msg.sender].push(address(vault));
         emit VaultCreated(address(vault), msg.sender);
     }

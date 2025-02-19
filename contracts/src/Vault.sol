@@ -59,8 +59,7 @@ contract RepayStrategy is IStrategy {
 
 contract Vault is Ownable {
 
-    // FIXME: Passed as parameter to easy changed between test and mainnet
-    address immutable public AAVE_POOL_ADDRESS = 0x48914C788295b5db23aF2b5F0B3BE775C4eA9440; // FIXME:
+    address immutable public AAVE_POOL_ADDRESS;
 
     uint16 immutable public REFERRAL_CODE = 0; // FIXME: visibility ?
 
@@ -68,10 +67,12 @@ contract Vault is Ownable {
     string public name;
     
     constructor(
+        address _aave_pool,
         address owner,
         uint8 _color,
         string memory _name
     ) Ownable(owner) {
+        AAVE_POOL_ADDRESS = _aave_pool;
         color = _color;
         name = _name;
     }
@@ -125,7 +126,7 @@ contract Vault is Ownable {
 
         // Send the token to the users
         // Isolate the debt in the smart contract
-        IERC20(asset).transfer(msg.sender, amount);
+        // IERC20(asset).transfer(msg.sender, amount);
 
         // FIXME: Does the smart contact should keep the token?
     }
