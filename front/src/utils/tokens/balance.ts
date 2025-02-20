@@ -23,6 +23,11 @@ export const formatBalance = (value?: bigint, decimals?: number) => {
   // }).format(BigInt(truncatedValue));
 };
 
+// FIXME: See how can we adjust it based on the network
+// ie: dynamic adjusting based on network
+
+// Icon - https://app.aave.com/icons/tokens/wbtc.svg
+
 export const convertAssetToUSD = (
   tokenAmount: bigint,
   tokenDecimals: number,
@@ -36,25 +41,12 @@ export const convertAssetToUSD = (
     );
   }
 
-  console.log("tokenAmount:", tokenAmount);
-
-  // const totalDecimals = BigInt(10 ** (tokenDecimals + ORACLE_PRICE_DECIMALS));
-
-  // console.log("totalDecimals: ", totalDecimals);
-
   // Convert token amount to base units (i.e., adjust for decimals)
   let formattedAmount = tokenAmount * oraclePriceUSD;
   const formattedAmountSTR = formatUnits(
     formattedAmount,
     tokenDecimals + ORACLE_PRICE_DECIMALS
   );
-
-  // const divisor = BigInt(10 ** ORACLE_PRICE_DECIMALS);
-  // const value = formattedAmount / divisor;
-
-  console.log("formattedAmount: ", formattedAmount);
-
-  // const formattedValue = BigInt(formatUnits(formattedAmount, tokenDecimals));
 
   // Format with thousands separators and 2 decimal places
   return new Intl.NumberFormat("en-US", {

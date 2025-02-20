@@ -19,7 +19,8 @@ const VaultPage: NextPage = () => {
 
   const { data: vaultName } = useVault(vaultAddress as string, "name");
 
-  console.log("Contract Data:", contractData);
+  // FIXME:
+  // console.log("Contract Data:", contractData);
 
   return (
     <>

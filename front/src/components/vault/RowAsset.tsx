@@ -1,17 +1,9 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, erc20Abi, formatUnits, getAddress } from "viem";
-import {
-  useAccount,
-  useBalance,
-  useEstimateFeesPerGas,
-  useReadContract,
-} from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import PopupButton from "../button/PopupButton";
-import SupplyFormModal from "./SupplyFormModal";
 
-import IPoolAddressesProvider from "@/abi/IPoolAddressesProvider.json";
-import IPriceOracle from "@/abi/IPriceOracleGetter.json";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 
@@ -25,9 +17,15 @@ const ORACLE_PRICE_DECIMALS = 8;
 const RowDashboardAsset = ({
   vaultAddress,
   assetAddress,
+  mode,
+  actionButton,
+  actionComponent,
 }: {
   vaultAddress: Address;
   assetAddress: Address;
+  mode: string;
+  actionButton: React.ComponentType<{ onClick: () => void }>;
+  actionComponent: any;
 }) => {
   const { address: userAddress } = useAccount();
 
@@ -52,125 +50,6 @@ const RowDashboardAsset = ({
     [getAddress(assetAddress)]
   );
 
-  // console.log("addressPriceOracle: ", addressPriceOracle);
-  // console.log("oracleAssetPrice: ", oraclePriceUSD);
-
-  // function getReserveData(address asset) external view returns (DataTypes.ReserveDataLegacy memory);
-
-  // const { data: reserveData, error } = useReadContract({
-  //   address: getAddress(process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL!),
-  //   abi: AAVEPool.abi,
-  //   functionName: "getReserveData",
-  //   args: [assetAddress],
-  // });
-
-  // if (reserveData) {
-  //   console.log(
-  //     `"${assetAddress}": { address: "${reserveData["aTokenAddress"]}"}`
-  //   );
-  // }
-
-  // let aToken = "0xD49d1CF2886B1c95A94e8a9066E8b298646716b6";
-
-  // const { data } = useReadContracts({
-  //   contracts: [
-  //     {
-  //       address: aToken,
-  //       abi: erc20Abi,
-  //       functionName: "name",
-  //     },
-  //     {
-  //       address: aToken,
-  //       abi: erc20Abi,
-  //       functionName: "symbol",
-  //     },
-  //     {
-  //       address: aToken,
-  //       abi: erc20Abi,
-  //       functionName: "decimals",
-  //     },
-  //   ],
-  // });
-  // console.log(data);
-
-  // if (data) {
-  //   console.log(`
-  // "${assetAddress}": {
-  //     name: "${data[0].result}",
-  //     symbol: "${data[1].result}",
-  //     decimals: ${data[2].result},
-  //   },
-  // `);
-  // }
-
-  //   if (assetAddress in TOKEN_ASSETS) {
-  //     token = TOKEN_ASSETS[assetAddress];
-  //   }
-  //   else {
-  //     // FIXME: Issue here!!!
-  //     const { data } = useReadContracts({
-  //       allowFailure: false,
-  //       contracts: [
-  //         {
-  //           address: assetAddress,
-  //           abi: erc20Abi,
-  //           functionName: "name",
-  //         },
-  //         {
-  //           address: assetAddress,
-  //           abi: erc20Abi,
-  //           functionName: "symbol",
-  //         },
-  //         {
-  //           address: assetAddress,
-  //           abi: erc20Abi,
-  //           functionName: "decimals",
-  //         },
-  //       ],
-  //     });
-  //     console.log(data);
-
-  //     if (data) {
-  //       token = {
-  //         address: assetAddress,
-  //         name: data[0],
-  //         symbol: data[1],
-  //         decimals: data[2],
-  //       };
-
-  //       console.log(`"Fetch new token data at "${assetAddress}"`);
-  //       console.log(
-  //         `{ address: "${assetAddress}", name: "${token.name}", symbol: "${token.symbol}", decimals: ${token.decimals} },`
-  //       );
-  //     } else {
-  //       console.log(`Issue when fetching token data at "${assetAddress}"`);
-  //       return;
-  //     }
-  //   }
-
-  // FIXME: to much for nothin I guess --> Need to simplify it!
-
-  // FIXME: Pop up Amount need to be selected / Asset / Quantity / value in dollars / APY / collaterization info / gas?
-
-  const supplyToken = () => {};
-
-  // FIXME: Invalid value for the WETH...
-
-  useEstimateFeesPerGas();
-
-  const SupplyButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
-                 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
-      aria-label={`Supply ${token.name}`}
-      onClick={onClick}
-      disabled={userBalanceToken?.value === BigInt(0)}
-    >
-      Supply
-    </button>
-  );
-
   return (
     <>
       <div className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
@@ -193,12 +72,19 @@ const RowDashboardAsset = ({
             {token.symbol && (
               <span className="text-sm text-gray-500">{token.symbol}</span>
             )}
+            {/* Collateral Indicator */}
+            {true && ( // FIXME:
+              <span
+                className="text-sm text-green-500"
+                title="This asset can be used as collateral"
+              >
+                ★
+              </span>
+            )}
           </div>
-          {/* // In your component where you have the balance display: */}
+          {/* Available Balance */}
           {userBalanceToken && (
             <div className="group/tooltip relative inline-block">
-              {" "}
-              {/* Added tooltip scope */}
               <p className="text-sm text-gray-600 truncate">
                 Available:{" "}
                 {formatBalance(
@@ -221,31 +107,11 @@ const RowDashboardAsset = ({
               </div>
             </div>
           )}
+        </div>
 
-          {/* Optional Metadata
-          {userBalanceToken && (
-            <>
-              <p
-                data-tooltip-target="tooltip-default"
-                className="text-sm text-gray-600 truncate"
-              >
-                Available:{" "}
-                {formatBalance(
-                  userBalanceToken.value,
-                  userBalanceToken.decimals
-                )}
-              </p>
-
-              <div
-                id="tooltip-default"
-                role="tooltip"
-                className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700"
-              >
-                Tooltip content
-                <div className="tooltip-arrow" data-popper-arrow></div>
-              </div>
-            </>
-          )} */}
+        {/* APY Display - Moved to the Middle */}
+        <div className="text-center flex-shrink-0">
+          <div className="text-sm text-blue-600 font-medium">{10}%</div>
         </div>
 
         {/* Balance and Action Section */}
@@ -258,18 +124,26 @@ const RowDashboardAsset = ({
                   vaultSupplyBalance.decimals
                 )}
               </div>
-              {/* FIXME: Put value in dollars */}
-              {/* {userBalance.fiatValue && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  ${userBalance.fiatValue.toFixed(2)}
-                </div>
-              )} */}
+
+              {(oraclePriceUSD as BigInt) &&
+                vaultSupplyBalance &&
+                vaultSupplyBalance.value > 0 && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    $
+                    {convertAssetToUSD(
+                      vaultSupplyBalance.value,
+                      vaultSupplyBalance.decimals,
+                      oraclePriceUSD as bigint,
+                      ORACLE_PRICE_DECIMALS
+                    )}
+                  </div>
+                )}
             </div>
           )}
 
           <PopupButton
-            ButtonComponent={SupplyButton}
-            ModalComponent={SupplyFormModal}
+            ButtonComponent={actionButton}
+            ModalComponent={actionComponent}
             modalProps={{
               vaultAddress,
               assetAddress,
