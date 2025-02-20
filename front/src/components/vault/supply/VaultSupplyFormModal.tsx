@@ -10,10 +10,9 @@ import {
   useWriteContract,
 } from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import LoadingButton from "../button/LoadingButton";
+import LoadingButton from "../../button/LoadingButton";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { convertAssetToUSD } from "@/utils/tokens/balance";
-import AAVEPool from "@/abi/Pool.json";
 
 interface ModalProps {
   onClose: () => void;
@@ -21,7 +20,7 @@ interface ModalProps {
   assetAddress: Address;
 }
 
-const BorrowFormModal: React.FC<ModalProps> = ({
+const VaultSupplyFormModal: React.FC<ModalProps> = ({
   onClose,
   vaultAddress,
   assetAddress,
@@ -38,17 +37,6 @@ const BorrowFormModal: React.FC<ModalProps> = ({
     token: assetAddress,
   });
 
-  const { data, error } = useReadContract({
-    address: getAddress(process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL!),
-    abi: AAVEPool.abi,
-    functionName: "getReserveData",
-    args: [assetAddress],
-  });
-
-  console.log("test data");
-  console.log("assetAddress: ", assetAddress, " data :", data);
-  console.log(error);
-
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
 
   const { data: oraclePriceUSD } = usePriceOracle(
@@ -56,11 +44,6 @@ const BorrowFormModal: React.FC<ModalProps> = ({
     "getAssetPrice",
     [getAddress(assetAddress)]
   );
-
-  useEffect(() => {
-    console.log("data");
-    console.log(data);
-  }, [data]);
 
   const validateAndFormatAmount = (): bigint | null => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -76,40 +59,91 @@ const BorrowFormModal: React.FC<ModalProps> = ({
     }
   };
 
+  // Fetch user allowance
+  const { data: allowance, isLoading: isLoadingAllowance } = useReadContract({
+    address: assetAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [userAddress!, vaultAddress],
+  });
+
   const {
-    writeContract: writeBorrowToken,
-    isPending: isBorrowing,
+    writeContract: writeApproveToken,
+    isPending: isApproving,
     error: approveError,
     isSuccess: isApproved,
   } = useWriteContract();
 
-  const borrowToken = () => {
+  const {
+    writeContract: writeSupplyToken,
+    isPending: isSupplying,
+    error: supplyError,
+  } = useWriteContract();
+
+  const approveToken = () => {
     let formattedAmount = validateAndFormatAmount();
     if (!formattedAmount) return;
 
-    // address asset,
-    // uint256 amount,
-    // uint256 interestRateMode
-
-    // FIXME: Need to indicate on the UI only variable rate are available
-    const interestRateMode = 2; // FIXME: can be only 1 or 2
-
-    console.log("borrowing data");
-    console.log(data["variableDebtTokenAddress"]);
-
-    writeBorrowToken({
-      address: vaultAddress,
-      abi: Vault.abi,
-      functionName: "borrow",
-      args: [assetAddress, formattedAmount, 2],
+    writeApproveToken({
+      address: assetAddress,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [vaultAddress, formattedAmount],
     });
   };
 
-  const isBorrowButtonDisabled = () => {
-    return amount == "" || Number(amount) == 0 || isProcessing || isBorrowing;
+  const supplyToken = () => {
+    let formattedAmount = validateAndFormatAmount();
+    if (!formattedAmount) return;
+
+    console.log(formattedAmount);
+
+    writeSupplyToken({
+      address: vaultAddress,
+      abi: Vault.abi,
+      functionName: "supply",
+      args: [assetAddress, formattedAmount],
+    });
   };
 
-  let availableToBorrow = BigInt(100);
+  const isApproveButtonDisabled = () => {
+    // Should be disabled if we do not have an input value
+    // If the input value is greater than the approval value
+    // If we are loading the value of the allowance
+    // console.log;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      !isNeedsApproval() ||
+      isProcessing ||
+      isApproving ||
+      isLoadingAllowance
+    );
+  };
+
+  const isSupplyButtonDisabled = () => {
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      isProcessing ||
+      isApproving ||
+      isSupplying ||
+      isNeedsApproval() ||
+      isLoadingAllowance
+    );
+  };
+
+  const isNeedsApproval = () => {
+    if (allowance !== undefined) {
+      return (
+        Number(allowance) == 0 ||
+        Number(allowance) < Number(amount) * 10 ** token.decimals
+      );
+    }
+    return false;
+  };
+
+  // FIXME:: Handle update approval value
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -117,7 +151,7 @@ const BorrowFormModal: React.FC<ModalProps> = ({
       <div className="relative px-6 pt-6 pb-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-gray-900">
-            Borrow {token.symbol}
+            Supply {token.symbol}
           </h2>
           <button
             onClick={onClose}
@@ -147,15 +181,15 @@ const BorrowFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">Amount</span>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Available</span>
+              <span className="text-sm text-gray-500">Wallet balance</span>
               <span className="text-sm font-medium text-gray-700">
-                {availableToBorrow
-                  ? formatUnits(availableToBorrow, token.decimals)
+                {userBalance
+                  ? formatUnits(userBalance.value, token.decimals)
                   : "0.00"}
               </span>
               <button
                 onClick={() =>
-                  setAmount(formatUnits(availableToBorrow, token.decimals))
+                  setAmount(formatUnits(userBalance!.value, token.decimals))
                 }
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
@@ -188,82 +222,78 @@ const BorrowFormModal: React.FC<ModalProps> = ({
 
           <div className="mt-2 text-right text-sm text-gray-500">
             ≈ $
-            {convertAssetToUSD(
-              BigInt(Number(amount) * 10 ** token.decimals),
-              token.decimals,
-              oraclePriceUSD
-            )}
+            {userBalance && oraclePriceUSD && amount
+              ? `${convertAssetToUSD(parseUnits(amount, userBalance.decimals), userBalance.decimals, oraclePriceUSD as bigint)}`
+              : "0.00"}{" "}
+            USD
           </div>
         </div>
 
         {/* Transaction Details */}
         <div className="mb-6 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">Health Factor</span>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-700">∞</span>
-              <span className="text-xs text-gray-400">
-                Liquidation at &lt;1.0
-              </span>
-            </div>
+            <span className="text-gray-500">Supply APY</span>
+            <span className="font-medium text-gray-700">0%</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-gray-500">Borrow APY</span>
-            <span className="font-medium text-gray-700">0%</span>
+            <span className="text-gray-500">Collateralization</span>
+            <span className="text-green-600 font-medium">Enabled</span>
           </div>
         </div>
 
-        {/* Attention Alert */}
-        <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
-          <div className="flex items-start space-x-2">
-            <svg
-              className="w-5 h-5 text-blue-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-sm text-blue-700">
-              <b>Attention:</b> Parameter changes via governance can alter your
-              account health factor and risk of liquidation. Follow the{" "}
-              <a
-                href="https://governance.aave.com/"
-                className="underline hover:text-blue-800"
-              >
-                Aave governance forum
-              </a>{" "}
-              for updates.
-            </p>
-          </div>
-        </div>
+        {/* Gas Estimation */}
+        {/* <div className="mb-6 flex items-center text-sm text-gray-500">
+          <svg
+            className="w-4 h-4 mr-1 text-blue-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Gas fee: $0.00
+        </div> */}
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <LoadingButton
-            isLoading={isBorrowing}
-            onClick={() => borrowToken()}
-            className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
-            disabled={isBorrowButtonDisabled()}
+          {isNeedsApproval() && (
+            <LoadingButton
+              isLoading={isApproving}
+              onClick={() => approveToken()}
+              className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
+              disabled={isApproveButtonDisabled()}
+            >
+              {isProcessing ? "Approving..." : "Approve"}
+            </LoadingButton>
+          )}
+
+          <button
+            onClick={() => supplyToken()}
+            disabled={isSupplyButtonDisabled()}
+            className={`w-full py-3 rounded-xl text-white font-medium transition-colors ${
+              isSupplyButtonDisabled()
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            {isProcessing ? "Processing..." : "Borrow"}
-          </LoadingButton>
+            {isProcessing ? "Processing..." : "Supply"}
+          </button>
         </div>
 
         {/* Error Message */}
-        {/* {borrowError && (
+        {supplyError && (
           <div className="mt-4 text-center text-sm text-red-600">
-            {borrowError.message}
+            {supplyError.message}
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );
 };
 
-export default BorrowFormModal;
+export default VaultSupplyFormModal;

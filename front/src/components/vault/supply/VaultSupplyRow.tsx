@@ -1,12 +1,12 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, getAddress } from "viem";
-import { useAccount, useBalance, useReadContract } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import PopupButton from "../../button/PopupButton";
 
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
-import SupplyFormModal from "../SupplyFormModal";
+import VaultSupplyFormModal from "./VaultSupplyFormModal";
 
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
@@ -21,7 +21,6 @@ const VaultSupplyRow = ({
   const { address: userAddress } = useAccount();
 
   const [apy, setApy] = useState<Number | undefined>(undefined);
-  const [isIsolated, setIsIsolated] = useState<boolean | undefined>(undefined);
 
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
@@ -68,28 +67,10 @@ const VaultSupplyRow = ({
       const apy = Number(liquidityRate) / 1e25;
       setApy(apy);
 
-      // Check if the asset is isolated
-      const assetConfiguration = (reserveData as ReserveDataLegacy)
-        .configuration.data;
-
-      // Step 1: Shift the bits to the right by 58 positions
-      const shiftedValue = assetConfiguration >> BigInt(61);
-
-      // Step 2: Mask the least significant bit (LSB) to get the value of bit 58
-      const borrowingEnabled = shiftedValue & BigInt(1);
-
-      // Convert the result to a boolean (true if borrowing is enabled, false otherwise)
-      const isBorrowingEnabled = borrowingEnabled === BigInt(1);
-
-      console.log(token.name, " extracted: ", isBorrowingEnabled);
-
-      // // Exctract the isolated flag from the configuration
-      // const isolatedFlag =
-      //   (BigInt(assetConfiguration) & BigInt(61)) !== BigInt(0);
-
-      // console.log(token.name, " - ", isolatedFlag);
-
-      setIsIsolated(isBorrowingEnabled);
+      // TODO: Isolated bit mask not working as expected, skip ATM.
+      // // Check if the asset is isolated
+      // const assetConfiguration = (reserveData as ReserveDataLegacy)
+      //   .configuration.data;
     }
   }, [reserveData]);
 
@@ -98,7 +79,7 @@ const VaultSupplyRow = ({
       <tr className="gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
         <th
           scope="row"
-          className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+          className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
         >
           <div className="flex-shrink-0">
             <Image
@@ -118,14 +99,14 @@ const VaultSupplyRow = ({
                 <span className="text-sm text-gray-500">{token.symbol}</span>
               )}
               {/* Collateral Indicator */}
-              {isIsolated && ( // FIXME:
+              {/* {isIsolated && ( // TODO: Skip this information ATM
                 <span
                   className="text-sm text-green-500"
                   title="This asset can be used as collateral"
                 >
                   ★
                 </span>
-              )}
+              )} */}
             </div>
             {/* Available Balance */}
             {userBalanceToken && (
@@ -192,7 +173,7 @@ const VaultSupplyRow = ({
         <td className="px-6 py-4">
           <PopupButton
             ButtonComponent={SupplyButton}
-            ModalComponent={SupplyFormModal}
+            ModalComponent={VaultSupplyFormModal}
             modalProps={{
               vaultAddress,
               assetAddress,

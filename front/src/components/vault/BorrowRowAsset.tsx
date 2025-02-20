@@ -1,16 +1,9 @@
-import Image from "next/image";
-import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { Address, erc20Abi, formatUnits, getAddress } from "viem";
+import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import { Address } from "viem";
 import { useAccount, useBalance } from "wagmi";
-import PopupButton from "../button/PopupButton";
-import SupplyFormModal from "./SupplyFormModal";
 
-import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
-import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 import RowDashboardAsset from "./RowAsset";
-import BorrowFormModal from "./BorrowFormModal";
-
-const ORACLE_PRICE_DECIMALS = 8;
+import VaultBorrowFormModal from "./borrow/VaultBorrowFormModal";
 
 const LendRowAsset = ({
   vaultAddress,
@@ -46,9 +39,8 @@ const LendRowAsset = ({
       <RowDashboardAsset
         vaultAddress={vaultAddress}
         assetAddress={assetAddress}
-        mode="lend"
         actionButton={BorrowButton}
-        actionComponent={BorrowFormModal}
+        actionComponent={VaultBorrowFormModal}
       />
     </>
   );

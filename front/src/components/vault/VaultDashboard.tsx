@@ -24,8 +24,8 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
           <div className="m-2 p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
             <div>
-              <table className="w-full text-left table-auto min-w-max">
-                <thead>
+              <table className="w-full table-auto min-w-max">
+                <thead className="text-center">
                   <tr>
                     <th scope="col" className="px-6 py-3">
                       Assets

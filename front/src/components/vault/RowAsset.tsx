@@ -17,13 +17,11 @@ const ORACLE_PRICE_DECIMALS = 8;
 const RowDashboardAsset = ({
   vaultAddress,
   assetAddress,
-  mode,
   actionButton,
   actionComponent,
 }: {
   vaultAddress: Address;
   assetAddress: Address;
-  mode: string;
   actionButton: React.ComponentType<{ onClick: () => void }>;
   actionComponent: any;
 }) => {
