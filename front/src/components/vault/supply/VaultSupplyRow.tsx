@@ -35,7 +35,44 @@ const VaultSupplyRow = ({
       onClick={onClick}
       disabled={userBalanceToken?.value === BigInt(0)}
     >
-      Supply
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      {/* Supply */}
+    </button>
+  );
+
+  const WithdrawButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+    <button
+      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
+                 focus:ring-blue-500 focus:ring-offset-2
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={`Withdraw ${token.name}`}
+      onClick={onClick}
+      disabled={vaultSupplyBalance?.value === BigInt(0)}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      {/* Withdraw */}
     </button>
   );
 
@@ -125,14 +162,24 @@ const VaultSupplyRow = ({
           </div>
         </td>
         <td className="px-6 py-4">
-          <PopupButton
-            ButtonComponent={SupplyButton}
-            ModalComponent={VaultSupplyFormModal}
-            modalProps={{
-              vaultAddress,
-              assetAddress,
-            }}
-          />
+          <div className="flex space-x-2">
+            <PopupButton
+              ButtonComponent={SupplyButton}
+              ModalComponent={VaultSupplyFormModal}
+              modalProps={{
+                vaultAddress,
+                assetAddress,
+              }}
+            />
+            <PopupButton
+              ButtonComponent={WithdrawButton}
+              ModalComponent={VaultSupplyFormModal}
+              modalProps={{
+                vaultAddress,
+                assetAddress,
+              }}
+            />
+          </div>
         </td>
       </tr>
     </>

@@ -15,6 +15,9 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
     args: [],
   });
 
+  // FIXME: Should we create table component for the lending/borrowing information
+  // Avoiding to defined the table here? Need to think about it!
+
   return (
     <>
       <section className="container mx-auto py-16 px-4">
@@ -64,8 +67,6 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
           <div className="m-2 p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold py-5">Your borrows</h2>
             <div>
-              {/* FIXME: not same asset need to do filter here */}
-
               <table className="w-full table-auto min-w-max">
                 <thead className="text-center">
                   <tr>
