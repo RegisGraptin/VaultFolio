@@ -4,8 +4,8 @@ import { Address, getAddress } from "viem";
 import { useReadContract } from "wagmi";
 
 import AAVEPool from "@/abi/Pool.json";
-import BorrowRowAsset from "./BorrowRowAsset";
 import VaultSupplyRow from "./supply/VaultSupplyRow";
+import VaultBorrowRow from "./borrow/VaultBorrowRow";
 
 const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
   const { data: assetAddresses, error } = useReadContract({
@@ -65,20 +65,39 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
             <h2 className="text-2xl font-extrabold py-5">Your borrows</h2>
             <div>
               {/* FIXME: not same asset need to do filter here */}
-              {(assetAddresses as Address[]) &&
-                (assetAddresses as Address[]).map(
-                  (assetAddress: string, index: number) => {
-                    return (
-                      <BorrowRowAsset
-                        key={index}
-                        vaultAddress={vaultAddress}
-                        assetAddress={getAddress(assetAddress)}
-                      />
-                    );
-                  }
-                )}
 
-              {error?.message}
+              <table className="w-full table-auto min-w-max">
+                <thead className="text-center">
+                  <tr>
+                    <th scope="col" className="px-6 py-3">
+                      Assets
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      APY
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Debts
+                    </th>
+                    <th scope="col" className="px-6 py-3">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(assetAddresses as Address[]) &&
+                    (assetAddresses as Address[]).map(
+                      (assetAddress: string, index: number) => {
+                        return (
+                          <VaultBorrowRow
+                            key={index}
+                            vaultAddress={vaultAddress}
+                            assetAddress={getAddress(assetAddress)}
+                          />
+                        );
+                      }
+                    )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
