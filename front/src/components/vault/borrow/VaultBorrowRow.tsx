@@ -1,12 +1,14 @@
-import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { Address, getAddress } from "viem";
-import { useAccount, useBalance } from "wagmi";
+import { DEBT_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import { Address, erc20Abi, getAddress } from "viem";
+import { useAccount, useBalance, useReadContracts } from "wagmi";
 import VautlAssetInfo from "../common/VaultAssetInfo";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
 import PopupButton from "@/components/button/PopupButton";
 import VaultBorrowFormModal from "./VaultBorrowFormModal";
+import VaultRepayFormModal from "./VaultRepayFormModal";
+import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 
 const VaultBorrowRow = ({
   vaultAddress,
@@ -18,6 +20,7 @@ const VaultBorrowRow = ({
   const { address: userAddress } = useAccount();
 
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
+  let debtToken: Token = DEBT_TOKENS[assetAddress.toLowerCase()];
 
   const [apy, setApy] = useState<Number | undefined>(undefined);
   const [canBeBorrow, setCanBeBorrow] = useState<boolean | undefined>(
@@ -36,6 +39,11 @@ const VaultBorrowRow = ({
     "getAssetPrice",
     [getAddress(assetAddress)]
   );
+
+  const { data: userDebtTokenBalance } = useBalance({
+    address: vaultAddress,
+    token: debtToken.address,
+  });
 
   // Get asset information from the AAVE pool
   const { data: reserveData } = useAave("getReserveData", [assetAddress]);
@@ -65,11 +73,26 @@ const VaultBorrowRow = ({
       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
                  focus:ring-blue-500 focus:ring-offset-2
                  disabled:opacity-50 disabled:cursor-not-allowed"
-      aria-label={`Supply ${token.name}`}
+      aria-label={`Borrow ${token.name}`}
       onClick={onClick}
       disabled={false} // FIXME: check health factor
     >
       Borrow
+    </button>
+  );
+
+  const RepayButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+    <button
+      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
+                 focus:ring-blue-500 focus:ring-offset-2
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={`Repay ${token.name}`}
+      onClick={onClick}
+      disabled={
+        userDebtTokenBalance && userDebtTokenBalance.value === BigInt(0)
+      } // FIXME: check if borrow balance > 0
+    >
+      Repay
     </button>
   );
 
@@ -100,11 +123,47 @@ const VaultBorrowRow = ({
             </div>
           )}
         </td>
-        <td className="px-6 py-4"></td>
+        {/* FIXME: add total borrow value */}
+        <td className="px-6 py-4">
+          <div className="flex items-center justify-center gap-4">
+            {userDebtTokenBalance && (
+              <div className="text-center">
+                <div className="font-mono text-base font-medium">
+                  {formatBalance(
+                    userDebtTokenBalance.value,
+                    userDebtTokenBalance.decimals
+                  )}
+                </div>
+
+                {(oraclePriceUSD as BigInt) &&
+                  userDebtTokenBalance &&
+                  userDebtTokenBalance.value > 0 && (
+                    <div className="text-sm text-gray-500">
+                      $
+                      {convertAssetToUSD(
+                        userDebtTokenBalance.value,
+                        userDebtTokenBalance.decimals,
+                        oraclePriceUSD as bigint
+                      )}
+                    </div>
+                  )}
+              </div>
+            )}
+          </div>
+        </td>
         <td className="px-6 py-4">
           <PopupButton
             ButtonComponent={BorrowButton}
             ModalComponent={VaultBorrowFormModal}
+            modalProps={{
+              vaultAddress,
+              assetAddress,
+            }}
+          />
+
+          <PopupButton
+            ButtonComponent={RepayButton}
+            ModalComponent={VaultRepayFormModal}
             modalProps={{
               vaultAddress,
               assetAddress,

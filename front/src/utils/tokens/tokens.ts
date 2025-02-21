@@ -117,3 +117,76 @@ export const LENDING_TOKENS: Record<string, Token> = {
     decimals: 2,
   },
 };
+
+export const DEBT_TOKENS: Record<string, Token> = {
+  "0x7984e363c38b590bb4ca35aed5133ef2c6619c40": {
+    address: "0x09F9A7cd11BE8468064b06FF20Dce43E0A434a2A",
+    name: "Aave Ethereum Variable Debt DAI",
+    symbol: "variableDebtEthDAI",
+    decimals: 18,
+  },
+  "0x279cbf5b7e3651f03cb9b71a9e7a3c924b267801": {
+    address: "0x2f42470c67aA2f6D7d2855FBB691179a6Dba4822",
+    name: "Aave Ethereum Variable Debt LINK",
+    symbol: "variableDebtEthLINK",
+    decimals: 18,
+  },
+  "0x2c9678042d52b97d27f2bd2947f7111d93f3dd0d": {
+    address: "0x6ED2eB0A4141975A8A33558234137265f36055f7",
+    name: "Aave Ethereum Variable Debt USDC",
+    symbol: "variableDebtEthUSDC",
+    decimals: 6,
+  },
+  "0x5ea79f3190ff37418d42f9b2618688494dbd9693": {
+    address: "0x52a011bF32a85D952aa259D85b705b7cF040836f",
+    name: "Aave Ethereum Variable Debt WBTC",
+    symbol: "variableDebtEthWBTC",
+    decimals: 8,
+  },
+  "0xb123dce044edf0a755505d9623fba16c0f41cae9": {
+    address: "0xD502CD7A595ec36992b0601fae0A4b50A88084D4",
+    name: "Aave Ethereum Variable Debt WETH",
+    symbol: "variableDebtEthWETH",
+    decimals: 18,
+  },
+  "0x186c0c26c45a8da1da34339ee513624a9609156d": {
+    address: "0x4cB0Dd10789208630F4def0DAAB4161f4Bb7b09D",
+    name: "Aave Ethereum Variable Debt USDT",
+    symbol: "variableDebtEthUSDT",
+    decimals: 6,
+  },
+  "0xfc2921be7b2762f0e87039905d6019b0ff5978a8": {
+    address: "0x7AE95AD823943283c3D5b7E9bE5E24414ba980cD",
+    name: "Aave Ethereum Variable Debt AAVE",
+    symbol: "variableDebtEthAAVE",
+    decimals: 18,
+  },
+  "0xdf40f3a3566b4271450083f1ad5732590ba47575": {
+    address: "0x2160F75FB89A6C35Bd59Ecf120B26f459956c925",
+    name: "Aave Ethereum Variable Debt EURS",
+    symbol: "variableDebtEthEURS",
+    decimals: 2,
+  },
+};
+
+// FIXME: automate this process for new network - scroll mainnet
+// const { data } = useReadContracts({
+//   allowFailure: false,
+//   contracts: [
+//     {
+//       address: (reserveData as ReserveDataLegacy).variableDebtTokenAddress,
+//       abi: erc20Abi,
+//       functionName: "name",
+//     },
+//     {
+//       address: (reserveData as ReserveDataLegacy).variableDebtTokenAddress,
+//       abi: erc20Abi,
+//       functionName: "symbol",
+//     },
+//     {
+//       address: (reserveData as ReserveDataLegacy).variableDebtTokenAddress,
+//       abi: erc20Abi,
+//       functionName: "decimals",
+//     },
+//   ],
+// });
