@@ -23,7 +23,7 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
       <section className="container mx-auto py-16 px-4">
         <h1 className="text-4xl font-extrabold">Vault information</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-1 xl:grid-cols-2">
           <div className="m-2 p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
             <div>

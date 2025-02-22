@@ -6,13 +6,17 @@ import Vault from "@/abi/Vault.json";
 import {
   useAccount,
   useBalance,
-  useReadContract,
+  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
-import { convertAssetToUSD } from "@/utils/tokens/balance";
+import {
+  convertAssetToUSD,
+  validateAndFormatAmount,
+} from "@/utils/tokens/balance";
+import { useAllowance } from "@/utils/hook/token";
 
 interface ModalProps {
   onClose: () => void;
@@ -30,7 +34,6 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const { data: userBalance } = useBalance({
     address: userAddress,
@@ -45,43 +48,52 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     [getAddress(assetAddress)]
   );
 
-  const validateAndFormatAmount = (): bigint | null => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      console.error("Invalid amount");
-      return null;
-    }
-
-    try {
-      return parseUnits(amount.toString(), token.decimals);
-    } catch (error) {
-      console.error("Error supplying token:", error);
-      return null;
-    }
-  };
-
   // Fetch user allowance
-  const { data: allowance, isLoading: isLoadingAllowance } = useReadContract({
-    address: assetAddress,
-    abi: erc20Abi,
-    functionName: "allowance",
-    args: [userAddress!, vaultAddress],
-  });
+  const {
+    data: allowance,
+    isLoading: isLoadingAllowance,
+    refetch: refetchAllowance,
+  } = useAllowance(assetAddress, [userAddress!, vaultAddress]);
 
   const {
     writeContract: writeApproveToken,
+    data: txHashApprove,
     isPending: isApproving,
     error: approveError,
     isSuccess: isApproved,
   } = useWriteContract();
 
+  const { isSuccess: isTxApproveConfirmed } = useWaitForTransactionReceipt({
+    hash: txHashApprove,
+  });
+
+  useEffect(() => {
+    if (isTxApproveConfirmed) {
+      // Refetch allowance to update the UI
+      console.log("Refreshing the data");
+      refetchAllowance();
+    }
+  }, [isTxApproveConfirmed]);
+
   const {
     writeContract: writeSupplyToken,
+    data: txHashSupply,
     isPending: isSupplying,
     error: supplyError,
   } = useWriteContract();
 
+  const { isSuccess: isTxSupplyConfirmed } = useWaitForTransactionReceipt({
+    hash: txHashSupply,
+  });
+
+  useEffect(() => {
+    if (isTxSupplyConfirmed) {
+      onClose();
+    }
+  }, [isTxSupplyConfirmed]);
+
   const approveToken = () => {
-    let formattedAmount = validateAndFormatAmount();
+    let formattedAmount = validateAndFormatAmount(amount, token.decimals);
     if (!formattedAmount) return;
 
     writeApproveToken({
@@ -93,10 +105,8 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
   };
 
   const supplyToken = () => {
-    let formattedAmount = validateAndFormatAmount();
+    let formattedAmount = validateAndFormatAmount(amount, token.decimals);
     if (!formattedAmount) return;
-
-    console.log(formattedAmount);
 
     writeSupplyToken({
       address: vaultAddress,
@@ -115,7 +125,6 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
       amount == "" ||
       Number(amount) == 0 ||
       !isNeedsApproval() ||
-      isProcessing ||
       isApproving ||
       isLoadingAllowance
     );
@@ -125,8 +134,6 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     return (
       amount == "" ||
       Number(amount) == 0 ||
-      isProcessing ||
-      isApproving ||
       isSupplying ||
       isNeedsApproval() ||
       isLoadingAllowance
@@ -142,8 +149,6 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     }
     return false;
   };
-
-  // FIXME:: Handle update approval value
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -268,21 +273,18 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
               className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
               disabled={isApproveButtonDisabled()}
             >
-              {isProcessing ? "Approving..." : "Approve"}
+              Approve
             </LoadingButton>
           )}
 
-          <button
+          <LoadingButton
+            isLoading={isSupplying}
             onClick={() => supplyToken()}
             disabled={isSupplyButtonDisabled()}
-            className={`w-full py-3 rounded-xl text-white font-medium transition-colors ${
-              isSupplyButtonDisabled()
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
           >
-            {isProcessing ? "Processing..." : "Supply"}
-          </button>
+            Supply
+          </LoadingButton>
         </div>
 
         {/* Error Message */}

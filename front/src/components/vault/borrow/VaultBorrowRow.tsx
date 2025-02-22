@@ -9,6 +9,7 @@ import PopupButton from "@/components/button/PopupButton";
 import VaultBorrowFormModal from "./VaultBorrowFormModal";
 import VaultRepayFormModal from "./VaultRepayFormModal";
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
+import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
 
 const VaultBorrowRow = ({
   vaultAddress,
@@ -77,7 +78,7 @@ const VaultBorrowRow = ({
       onClick={onClick}
       disabled={false} // FIXME: check health factor
     >
-      Borrow
+      <GiReceiveMoney className="h-5 w-5" />
     </button>
   );
 
@@ -92,7 +93,7 @@ const VaultBorrowRow = ({
         userDebtTokenBalance && userDebtTokenBalance.value === BigInt(0)
       } // FIXME: check if borrow balance > 0
     >
-      Repay
+      <GiPayMoney className="h-5 w-5" />
     </button>
   );
 
@@ -152,23 +153,25 @@ const VaultBorrowRow = ({
           </div>
         </td>
         <td className="px-6 py-4">
-          <PopupButton
-            ButtonComponent={BorrowButton}
-            ModalComponent={VaultBorrowFormModal}
-            modalProps={{
-              vaultAddress,
-              assetAddress,
-            }}
-          />
+          <div className="flex space-x-2">
+            <PopupButton
+              ButtonComponent={BorrowButton}
+              ModalComponent={VaultBorrowFormModal}
+              modalProps={{
+                vaultAddress,
+                assetAddress,
+              }}
+            />
 
-          <PopupButton
-            ButtonComponent={RepayButton}
-            ModalComponent={VaultRepayFormModal}
-            modalProps={{
-              vaultAddress,
-              assetAddress,
-            }}
-          />
+            <PopupButton
+              ButtonComponent={RepayButton}
+              ModalComponent={VaultRepayFormModal}
+              modalProps={{
+                vaultAddress,
+                assetAddress,
+              }}
+            />
+          </div>
         </td>
       </tr>
     </>

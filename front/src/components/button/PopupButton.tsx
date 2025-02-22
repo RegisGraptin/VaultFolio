@@ -17,6 +17,13 @@ const PopupButton = <T,>({
     if (e.target === e.currentTarget) setIsOpen(false);
   };
 
+  const onModalClose = () => {
+    setIsOpen(false); // Close the modal
+    if (modalProps && typeof (modalProps as any).onClose === "function") {
+      (modalProps as any).onClose(); // Call the additional onClose function
+    }
+  };
+
   return (
     <>
       <ButtonComponent onClick={() => setIsOpen(true)} />
@@ -27,10 +34,8 @@ const PopupButton = <T,>({
           onClick={handleClose}
           aria-hidden={!isOpen}
         >
-          <ModalComponent
-            onClose={() => setIsOpen(false)}
-            {...(modalProps as T)}
-          />
+          {/* Order in the props are important here */}
+          <ModalComponent {...(modalProps as T)} onClose={onModalClose} />
         </div>
       )}
     </>

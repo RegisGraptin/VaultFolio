@@ -12,7 +12,10 @@ import {
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
-import { convertAssetToUSD } from "@/utils/tokens/balance";
+import {
+  convertAssetToUSD,
+  validateAndFormatAmount,
+} from "@/utils/tokens/balance";
 import AAVEPool from "@/abi/Pool.json";
 
 interface ModalProps {
@@ -45,10 +48,6 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
     args: [assetAddress],
   });
 
-  console.log("test data");
-  console.log("assetAddress: ", assetAddress, " data :", data);
-  console.log(error);
-
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
 
   const { data: oraclePriceUSD } = usePriceOracle(
@@ -57,59 +56,28 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
     [getAddress(assetAddress)]
   );
 
-  useEffect(() => {
-    console.log("data");
-    console.log(data);
-  }, [data]);
+  let availableToBorrow = BigInt(100);
 
-  const validateAndFormatAmount = (): bigint | null => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      console.error("Invalid amount");
-      return null;
-    }
+  const { writeContract: writeRepayToken, isPending: isRepaying } =
+    useWriteContract();
 
-    try {
-      return parseUnits(amount.toString(), token.decimals);
-    } catch (error) {
-      console.error("Error supplying token:", error);
-      return null;
-    }
-  };
-
-  const {
-    writeContract: writeBorrowToken,
-    isPending: isBorrowing,
-    error: approveError,
-    isSuccess: isApproved,
-  } = useWriteContract();
-
-  const borrowToken = () => {
-    let formattedAmount = validateAndFormatAmount();
+  const repayToken = () => {
+    // FIXME: to checked
+    let formattedAmount = validateAndFormatAmount(amount, token.decimals);
     if (!formattedAmount) return;
 
-    // address asset,
-    // uint256 amount,
-    // uint256 interestRateMode
-
-    // FIXME: Need to indicate on the UI only variable rate are available
-    const interestRateMode = 2; // FIXME: can be only 1 or 2
-
-    console.log("borrowing data");
-    console.log(data["variableDebtTokenAddress"]);
-
-    writeBorrowToken({
+    writeRepayToken({
       address: vaultAddress,
       abi: Vault.abi,
-      functionName: "borrow",
+      functionName: "repay",
       args: [assetAddress, formattedAmount, 2],
     });
   };
 
-  const isBorrowButtonDisabled = () => {
-    return amount == "" || Number(amount) == 0 || isProcessing || isBorrowing;
+  const isRepayButtonDisabled = () => {
+    // FIXME:
+    return false;
   };
-
-  let availableToBorrow = BigInt(100);
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -117,7 +85,7 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
       <div className="relative px-6 pt-6 pb-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-gray-900">
-            Borrow {token.symbol}
+            Repay {token.symbol}
           </h2>
           <button
             onClick={onClose}
@@ -196,20 +164,59 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
           </div>
         </div>
 
-        {/* Transaction Details */}
-        <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Health Factor</span>
-            <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-700">∞</span>
-              <span className="text-xs text-gray-400">
-                Liquidation at &lt;1.0
-              </span>
+        {/* Transaction Overview */}
+        <div className="mb-6">
+          <p className="text-sm text-gray-500 mb-3">Transaction overview</p>
+          <div className="space-y-3">
+            {/* Remaining Debt */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Remaining debt</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700">
+                  1.0000000 EURS
+                </span>
+                <svg
+                  className="h-4 w-4 text-blue-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-gray-700">
+                  0 EURS
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Borrow APY</span>
-            <span className="font-medium text-gray-700">0%</span>
+
+            {/* Health Factor */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Health factor</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700">
+                  173.17
+                </span>
+                <svg
+                  className="h-4 w-4 text-blue-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-gray-700">∞</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -246,12 +253,12 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
         {/* Action Buttons */}
         <div className="space-y-3">
           <LoadingButton
-            isLoading={isBorrowing}
-            onClick={() => borrowToken()}
+            isLoading={isRepaying}
+            onClick={() => repayToken()}
             className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
-            disabled={isBorrowButtonDisabled()}
+            disabled={isRepayButtonDisabled()}
           >
-            {isProcessing ? "Processing..." : "Borrow"}
+            Repay
           </LoadingButton>
         </div>
 

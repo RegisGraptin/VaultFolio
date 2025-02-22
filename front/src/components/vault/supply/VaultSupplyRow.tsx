@@ -11,6 +11,7 @@ import VaultSupplyFormModal from "./VaultSupplyFormModal";
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
 import VautlAssetInfo from "../common/VaultAssetInfo";
+import VaultWithdrawFormModal from "./VaultWithdrawFormModal";
 
 const VaultSupplyRow = ({
   vaultAddress,
@@ -76,15 +77,17 @@ const VaultSupplyRow = ({
     </button>
   );
 
-  const { data: userBalanceToken } = useBalance({
+  const { data: userBalanceToken, refetch: refetchUserBalance } = useBalance({
     address: userAddress,
     token: assetAddress,
   });
 
-  const { data: vaultSupplyBalance } = useBalance({
-    address: vaultAddress,
-    token: lending_token.address,
-  });
+  const { data: vaultSupplyBalance, refetch: refetchVaultBalance } = useBalance(
+    {
+      address: vaultAddress,
+      token: lending_token.address,
+    }
+  );
 
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
 
@@ -169,11 +172,19 @@ const VaultSupplyRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                onClose: async () => {
+                  // Refresh the vault & user balance
+                  refetchUserBalance().then(({ data }) => {
+                    console.log("Refetched balance:", data);
+                  });
+
+                  await refetchVaultBalance();
+                },
               }}
             />
             <PopupButton
               ButtonComponent={WithdrawButton}
-              ModalComponent={VaultSupplyFormModal}
+              ModalComponent={VaultWithdrawFormModal}
               modalProps={{
                 vaultAddress,
                 assetAddress,

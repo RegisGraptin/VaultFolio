@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 
 export const formatBalance = (value?: bigint, decimals?: number) => {
   if (!value || decimals === undefined) return "0";
@@ -55,4 +55,21 @@ export const convertAssetToUSD = (
     maximumFractionDigits: 2,
     useGrouping: true,
   }).format(Number(formattedAmountSTR));
+};
+
+export const validateAndFormatAmount = (
+  amount: string,
+  decimals: number
+): bigint | null => {
+  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    console.error("Invalid amount");
+    return null;
+  }
+
+  try {
+    return parseUnits(amount.toString(), decimals);
+  } catch (error) {
+    console.error("Error supplying token:", error);
+    return null;
+  }
 };
