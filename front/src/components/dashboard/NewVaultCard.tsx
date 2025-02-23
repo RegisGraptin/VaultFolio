@@ -99,7 +99,7 @@ const NewVaultCard = () => {
   return (
     <>
       <div
-        className="relative w-full max-w-sm p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer"
+        className="w-full max-w-sm p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer"
         onClick={handleOpen}
       >
         <FaPlusCircle className="text-gray-500 text-4xl mb-3" />

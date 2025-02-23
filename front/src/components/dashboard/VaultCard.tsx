@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { FaHeart, FaRobot, FaSync } from "react-icons/fa";
@@ -52,7 +54,7 @@ const VaultCard: React.FC<VaultCardProps> = ({
   return (
     <Link href={`/vaults/${vaultAddress}`}>
       <div
-        className={`relative w-full max-w-sm p-6 rounded-xl border-2 ${getVaultColor(vaultColorIndex as number)} 
+        className={`w-full max-w-sm p-6 rounded-xl border-2 ${getVaultColor(vaultColorIndex as number)} 
       transition-all hover:shadow-lg text-center shadow-md ${shadowIntensity}`}
       >
         <h3 className="text-xl font-semibold uppercase tracking-wide mb-3">
