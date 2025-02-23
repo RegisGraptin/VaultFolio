@@ -11,6 +11,11 @@ import Manager from "@/abi/Manager.json";
 import WalletDisconnected from "@/components/wallet/WalletDisconnected";
 import WalletConnecting from "@/components/wallet/WalletConnecting";
 import { AAVEPositionProvider } from "@/components/aave/AAVEPositionProvider";
+import DashboardCardHeader from "@/components/dashboard/card/DashboardCardHeader";
+import BalanceOverview from "@/components/dashboard/card/BalanceOverview";
+import QuickActions from "@/components/dashboard/card/QuickActions";
+import TransactionHistory from "@/components/dashboard/card/TransactionHistory";
+import SidebarMenu from "@/components/dashboard/SidebarMenu";
 
 const Dashboard: NextPage = () => {
   const { address: userAddress, isConnected, status } = useAccount();
@@ -34,8 +39,12 @@ const Dashboard: NextPage = () => {
 
   return (
     <>
-      <Header />
-      <main className="bg-gray-50 min-h-screen">
+      {/* <Header /> */}
+
+      <SidebarMenu />
+      <main className="bg-gray-50 min-h-screen p-6">
+        <DashboardCardHeader />
+
         <section className="container mx-auto pt-10">
           <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
             List of vaults

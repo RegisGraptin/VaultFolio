@@ -6,6 +6,7 @@ import { useReadContract } from "wagmi";
 import AAVEPool from "@/abi/Pool.json";
 import VaultSupplyRow from "./supply/VaultSupplyRow";
 import VaultBorrowRow from "./borrow/VaultBorrowRow";
+import PortfolioMetric from "./PortoflioMetric";
 
 const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
   const { data: assetAddresses, error } = useReadContract({
@@ -22,7 +23,7 @@ const VaultDashboard = ({ vaultAddress }: { vaultAddress: Address }) => {
     <>
       <section className="container mx-auto py-16 px-4">
         <h1 className="text-4xl font-extrabold">Vault information</h1>
-
+        <PortfolioMetric />
         <div className="grid grid-cols-1 xl:grid-cols-2">
           <div className="m-2 p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
