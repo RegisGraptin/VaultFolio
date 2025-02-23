@@ -1,5 +1,5 @@
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
-import { Token } from "@/utils/tokens/tokens";
+import { Balance, Token } from "@/utils/tokens/tokens";
 import Image from "next/image";
 import { GetBalanceData } from "wagmi/query";
 
@@ -9,7 +9,7 @@ const VautlAssetInfo = ({
   oraclePriceUSD,
 }: {
   token: Token;
-  userBalanceToken: GetBalanceData | undefined;
+  userBalanceToken: GetBalanceData | Balance | undefined;
   oraclePriceUSD: bigint | undefined;
 }) => {
   return (

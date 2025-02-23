@@ -1,5 +1,11 @@
 import { Address } from "viem";
 
+export interface Balance {
+  decimals: number;
+  symbol: string;
+  value: bigint;
+}
+
 export interface Token {
   address: Address;
   name: string;

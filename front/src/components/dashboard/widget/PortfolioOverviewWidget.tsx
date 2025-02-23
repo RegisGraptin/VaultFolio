@@ -1,3 +1,7 @@
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import AttendanceChart from "./MonthOverview";
+import WidgetLayout from "./WidgetLayout";
+
 const PortfolioOverviewWidget = () => {
   // Example data - replace with real data
   const totalValue = "$542,470.00";
@@ -6,10 +10,14 @@ const PortfolioOverviewWidget = () => {
   const endDate = "12 January 2025";
 
   // Example chart data points (normalized coordinates)
-  const chartPath = "M4 24 L20 12 L36 18 L52 8 L68 14 L84 4 L100 10";
+
+  const data = [
+    { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
+    { name: "Page B", uv: 500, pv: 2400, amt: 2400 },
+  ];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+    <WidgetLayout>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Side - Portfolio Value */}
         <div>
@@ -39,10 +47,17 @@ const PortfolioOverviewWidget = () => {
 
         {/* Right Side - Chart */}
         <div className="h-48 md:h-auto">
-          <div className="relative h-full w-full"></div>
+          <div className="relative h-full w-full">
+            {/* <LineChart width={400} height={400} data={data}>
+              <Line type="monotone" dataKey="uv" stroke="#8884d8" />
+              <CartesianGrid stroke="#ccc" />
+              <XAxis dataKey="name" />
+              <YAxis />
+            </LineChart> */}
+          </div>
         </div>
       </div>
-    </div>
+    </WidgetLayout>
   );
 };
 

@@ -18,6 +18,9 @@ import TransactionHistory from "@/components/dashboard/card/TransactionHistory";
 import SidebarMenu from "@/components/dashboard/SidebarMenu";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PortfolioOverviewWidget from "@/components/dashboard/widget/PortfolioOverviewWidget";
+import MonthlyRewardWidget from "@/components/dashboard/widget/MonthlyRewardWidget";
+import AllocationWidget from "@/components/dashboard/widget/AllocationWidget";
+import TotalSupplyWidget from "@/components/dashboard/widget/TotalSupplyWidget";
 
 const Dashboard: NextPage = () => {
   const { address: userAddress } = useAccount();
@@ -38,7 +41,23 @@ const Dashboard: NextPage = () => {
           Overview Dashboard
         </h1>
 
-        <PortfolioOverviewWidget />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 items-stretch mb-2">
+          <div className="w-full h-full md:col-span-2">
+            <PortfolioOverviewWidget />
+          </div>
+          <div className="w-full h-full md:col-span-1">
+            <AllocationWidget />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 auto-rows-auto">
+          <div className="w-full md:col-span-2">
+            <TotalSupplyWidget />
+          </div>
+          <div className="w-full md:col-span-1">
+            <MonthlyRewardWidget />
+          </div>
+        </div>
       </section>
     </DashboardLayout>
   );
