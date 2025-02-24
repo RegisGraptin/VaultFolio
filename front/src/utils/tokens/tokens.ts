@@ -2,7 +2,6 @@ import { Address } from "viem";
 
 export interface Balance {
   decimals: number;
-  symbol: string;
   value: bigint;
 }
 

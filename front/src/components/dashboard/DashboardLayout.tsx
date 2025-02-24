@@ -26,7 +26,7 @@ export default function DashboardLayout({
     <>
       <div className="flex">
         <SidebarMenu />
-        <main className="bg-gray-50 w-full min-h-screen p-6 overflow-scroll">
+        <main className="bg-gray-50 w-full h-screen overflow-auto p-6">
           {children}
         </main>
       </div>

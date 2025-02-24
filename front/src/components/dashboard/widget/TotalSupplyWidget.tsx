@@ -107,7 +107,6 @@ const TokenSupplyRow = ({
 
   const getBalancePercent = (balance: Balance) => {
     if (balance.value > 0 && totalValue > 0) {
-      console.log(balance.value, totalValue, balance.value / totalValue);
       return (Number(balance.value) / Number(totalValue)) * 100;
     }
     return 0.0;

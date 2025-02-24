@@ -52,51 +52,49 @@ const VaultCard: React.FC<VaultCardProps> = ({
   const heartColor = healthRatio < 1.5 ? "text-red-500" : "text-green-500";
 
   return (
-    <Link href={`/vaults/${vaultAddress}`}>
-      <div
-        className={`w-full max-w-sm p-6 rounded-xl border-2 ${getVaultColor(vaultColorIndex as number)} 
+    // <Link href={`/vaults/${vaultAddress}`}>
+    <div
+      className={`w-full p-6 rounded-xl border-2 ${getVaultColor(vaultColorIndex as number)} 
       transition-all hover:shadow-lg text-center shadow-md ${shadowIntensity}`}
-      >
-        <h3 className="text-xl font-semibold uppercase tracking-wide mb-3">
-          {vaultName ? (vaultName as string) : "Wallet"}
-        </h3>
+    >
+      <h3 className="text-xl font-semibold uppercase tracking-wide mb-3">
+        {vaultName ? (vaultName as string) : "Wallet"}
+      </h3>
 
-        <div className="flex justify-between items-center w-full mb-3">
-          <div className="text-green-500">
-            <p className="text-lg font-semibold">${lendingValue.toFixed(2)}</p>
-            <p className="text-sm text-gray-500">Lending</p>
-          </div>
-          <div className="text-red-500">
-            <p className="text-lg font-semibold">
-              ${borrowValue.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-500">Borrow</p>
-          </div>
+      <div className="flex justify-between items-center w-full mb-3">
+        <div className="text-green-500">
+          <p className="text-lg font-semibold">${lendingValue.toFixed(2)}</p>
+          <p className="text-sm text-gray-500">Lending</p>
         </div>
-
-        <div className="flex justify-between items-center w-full mb-4">
-          <span className="text-lg font-semibold">{lendingAPY}%</span>
-          <div className="flex items-center">
-            <FaHeart className={`${heartColor} mr-2`} />
-            <span className="text-lg font-semibold">
-              {healthRatio.toFixed(2)}
-            </span>
-          </div>
-          <span className="text-lg font-semibold text-red-500">
-            {borrowAPY}%
-          </span>
-        </div>
-
-        <div className="flex justify-center space-x-4">
-          {strategies.map((strategy, index) => (
-            <div key={index} className="text-gray-600 text-xl">
-              {strategy === "automation" && <FaRobot />}
-              {strategy === "reinvest" && <FaSync />}
-            </div>
-          ))}
+        <div className="text-red-500">
+          <p className="text-lg font-semibold">
+            ${borrowValue.toLocaleString()}
+          </p>
+          <p className="text-sm text-gray-500">Borrow</p>
         </div>
       </div>
-    </Link>
+
+      <div className="flex justify-between items-center w-full mb-4">
+        <span className="text-lg font-semibold">{lendingAPY}%</span>
+        <div className="flex items-center">
+          <FaHeart className={`${heartColor} mr-2`} />
+          <span className="text-lg font-semibold">
+            {healthRatio.toFixed(2)}
+          </span>
+        </div>
+        <span className="text-lg font-semibold text-red-500">{borrowAPY}%</span>
+      </div>
+
+      <div className="flex justify-center space-x-4">
+        {strategies.map((strategy, index) => (
+          <div key={index} className="text-gray-600 text-xl">
+            {strategy === "automation" && <FaRobot />}
+            {strategy === "reinvest" && <FaSync />}
+          </div>
+        ))}
+      </div>
+    </div>
+    // </Link>
   );
 };
 

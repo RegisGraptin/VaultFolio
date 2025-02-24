@@ -34,27 +34,25 @@ const Dashboard: NextPage = () => {
 
   return (
     <DashboardLayout>
-      <DashboardCardHeader />
-
       <section className="container mx-auto pt-10">
         <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
           Overview Dashboard
         </h1>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 items-stretch mb-2">
-          <div className="w-full h-full md:col-span-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 items-stretch mb-2">
+          <div className="w-full h-full xl:col-span-2">
             <PortfolioOverviewWidget />
           </div>
-          <div className="w-full h-full md:col-span-1">
+          <div className="w-full h-full xl:col-span-1">
             <AllocationWidget />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 auto-rows-auto">
-          <div className="w-full md:col-span-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 auto-rows-auto">
+          <div className="w-full xl:col-span-2">
             <TotalSupplyWidget />
           </div>
-          <div className="w-full md:col-span-1">
+          <div className="w-full xl:col-span-1">
             <MonthlyRewardWidget />
           </div>
         </div>

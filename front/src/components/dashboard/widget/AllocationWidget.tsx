@@ -7,7 +7,6 @@ import {
   Legend,
 } from "recharts";
 import WidgetLayout from "./WidgetLayout";
-// import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
 const AllocationWidget = () => {
   // Sample data - replace with real data

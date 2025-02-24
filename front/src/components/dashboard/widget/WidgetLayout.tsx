@@ -5,7 +5,7 @@ export default function WidgetLayout({
 }) {
   return (
     <>
-      <div className="bg-white min-h-120 rounded-2xl m-3 p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+      <div className="bg-white min-h-120 rounded-2xl m-1 p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
         {children}
       </div>
     </>

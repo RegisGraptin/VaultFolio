@@ -59,14 +59,14 @@ const SidebarMenu = () => {
     <>
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 p-2 bg-gray-800 text-white rounded lg:hidden z-50"
+        className="fixed top-4 left-4 p-2 bg-gray-800 text-white rounded lg:hidden z-60"
       >
         ☰
       </button>
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:relative flex flex-col h-screen bg-gray-800 text-white w-100 transform transition-transform duration-300 ease-in-out ${
+        className={`z-50 fixed lg:relative flex flex-col h-screen bg-gray-800 text-white w-100 transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
