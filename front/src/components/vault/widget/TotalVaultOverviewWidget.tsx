@@ -1,8 +1,9 @@
+import WidgetLayout from "@/components/dashboard/widget/WidgetLayout";
 import React from "react";
 
-const VaultTotalBalanceHeader = () => {
+const TotalVaultOverviewWidget = () => {
   return (
-    <div className="bg-gray-800 text-white p-6 rounded-lg shadow-md">
+    <WidgetLayout>
       <div className="flex justify-between items-center">
         <div>
           <p className="text-gray-400">Total Vault Value</p>
@@ -14,8 +15,8 @@ const VaultTotalBalanceHeader = () => {
           </button>
         </div>
       </div>
-    </div>
+    </WidgetLayout>
   );
 };
 
-export default VaultTotalBalanceHeader;
+export default TotalVaultOverviewWidget;

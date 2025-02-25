@@ -7,10 +7,10 @@ import Manager from "@/abi/Manager.json";
 import { AAVEPositionProvider } from "@/components/aave/AAVEPositionProvider";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import VaultDetailWidget from "@/components/dashboard/widget/VaultDetailWidget";
-import VaultTotalBalanceHeader from "@/components/dashboard/card/VaultTotalBalanceHeader";
 import PopupButton from "@/components/button/PopupButton";
 import { FaPlusCircle } from "react-icons/fa";
 import CreateVaultFormModal from "@/components/dashboard/form/CreateVaultFormModal";
+import TotalVaultOverviewWidget from "@/components/vault/widget/TotalVaultOverviewWidget";
 
 const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <div
@@ -34,14 +34,14 @@ const VaultDashboardPage: NextPage = () => {
 
   return (
     <DashboardLayout>
-      <section className="container mx-auto pt-10">
-        <VaultTotalBalanceHeader />
+      <section className="container mx-auto">
+        <TotalVaultOverviewWidget />
 
-        <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
+        {/* <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
           List of vaults
-        </h1>
+        </h1>  */}
 
-        <div className="grid gap-4 p-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="pt-4 grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
           {/* Show user address */}
           <VaultDetailWidget vaultAddress={userAddress!} />
 

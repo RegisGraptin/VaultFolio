@@ -42,26 +42,6 @@ const VaultPage: NextPage = () => {
       </DashboardLayout>
     </>
   );
-
-  // return (
-  //   <>
-  //     <DashboardLayout>
-  //       <section className="container mx-auto pt-10">
-  //         <VaultDetailWidget />
-
-  //         <VaultRewardLossWidget />
-
-  //         {/* {isValidAddress && (
-  //           <>
-  //             <VaultDashboard
-  //               vaultAddress={getAddress(vaultAddress as string)}
-  //             />
-  //           </>
-  //         )} */}
-  //       </section>
-  //     </DashboardLayout>
-  //   </>
-  // );
 };
 
 export default VaultPage;
