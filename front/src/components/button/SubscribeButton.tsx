@@ -2,12 +2,12 @@
 
 import React, { FormEvent, useState } from "react";
 import Link from "next/link";
-import Notification from "@/components/Notification";
+import Notification from "@/components/common/Notification";
 
 export default function SubscribeButton() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [formError, setFormError] = React.useState<string | undefined>(
-    undefined,
+    undefined
   );
 
   const [showNotification, setShowNotification] = useState(false);

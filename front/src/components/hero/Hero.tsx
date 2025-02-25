@@ -1,4 +1,4 @@
-import SubscribeButton from "./button/SubscribeButton";
+import SubscribeButton from "../button/SubscribeButton";
 
 export default function Hero() {
   return (

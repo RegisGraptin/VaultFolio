@@ -1,7 +1,7 @@
 import { Address } from "viem";
 import WidgetLayout from "./WidgetLayout";
 import { usePortfolioValue, useVault } from "@/utils/hook/vault";
-import { getVaultColor } from "@/utils/vault/colors";
+import { getMenuColorStyle, getVaultColor } from "@/utils/vault/colors";
 import { displayFormattedBalance } from "@/utils/tokens/balance";
 import {
   CartesianGrid,
@@ -11,6 +11,9 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
+import { FaChevronRight, FaVault } from "react-icons/fa6";
+import { IoWallet } from "react-icons/io5";
+import Link from "next/link";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -71,23 +74,36 @@ const VaultDetailWidget = ({
     },
   ];
 
+  const subTitle = vaultName ? `Vault #${vaultIndex}` : "Wallet";
+  const title = vaultName ? (vaultName as string) : "My Wallet";
+
   return (
     <WidgetLayout>
-      {/* flex justify-between items-start */}
       <div className="mb-6">
         {/* Display vault header */}
-        <div className="flex">
-          <div
-            className={`w-12 h-12 mr-4 mt-1 rounded-md ${getVaultColor(vaultColorIndex as number)}`}
-          />
-          <div>
-            <p className="text-sm text-gray-500 mt-1">
-              {vaultName ? `Vault #${vaultIndex}` : "Wallet"}
-            </p>
-            <h2 className="text-lg font-semibold text-gray-700">
-              {vaultName ? (vaultName as string) : "My Wallet"}
-            </h2>
+        <div className="flex justify-between items-start mt-1">
+          <div className="flex">
+            <div
+              className={`w-12 h-12 mr-4 flex items-center justify-center rounded-md ${getVaultColor(vaultColorIndex as number)}`}
+            >
+              {vaultName ? (
+                <FaVault className={`mx-2 text-2xl`} />
+              ) : (
+                <IoWallet className={`mx-2 text-2xl`} />
+              )}
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">{subTitle}</p>
+              <h2 className="text-lg font-semibold text-gray-700">{title}</h2>
+            </div>
           </div>
+          <Link title="View detail" href={`/vaults/${vaultAddress}`}>
+            <div
+              className={`w-12 h-12 flex items-center justify-center rounded-md ${getMenuColorStyle(vaultColorIndex as number)}`}
+            >
+              <FaChevronRight className={`mx-2 text-2xl`} />
+            </div>
+          </Link>
         </div>
 
         {/* Display total value */}

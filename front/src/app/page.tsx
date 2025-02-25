@@ -1,13 +1,13 @@
 import type { Metadata, NextPage } from "next";
 import React from "react";
 
-import Footer from "../components/Footer";
-import Faq from "../components/Faq";
-import ProblemSolution from "../components/ProblemSolution";
-import HowItWorks from "../components/HowItWorks";
-import WhyChooseUs from "../components/WhyChooseUs";
-import Hero from "../components/Hero";
-import Cta from "@/components/Cta";
+import Footer from "../components/common/Footer";
+import Faq from "../components/hero/Faq";
+import ProblemSolution from "../components/hero/ProblemSolution";
+import HowItWorks from "../components/hero/HowItWorks";
+import WhyChooseUs from "../components/hero/WhyChooseUs";
+import Hero from "../components/hero/Hero";
+import Cta from "@/components/hero/Cta";
 
 export const metadata: Metadata = {
   title:

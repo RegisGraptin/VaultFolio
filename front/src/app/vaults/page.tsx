@@ -1,6 +1,5 @@
 "use client";
 
-import NewVaultCard from "@/components/dashboard/NewVaultCard";
 import { NextPage } from "next";
 import { Address, getAddress } from "viem";
 import { useAccount, useReadContract } from "wagmi";
@@ -15,7 +14,7 @@ import CreateVaultFormModal from "@/components/dashboard/form/CreateVaultFormMod
 
 const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <div
-    className="w-full max-w-sm p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer"
+    className="w-full p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer"
     onClick={onClick}
   >
     <FaPlusCircle className="text-gray-500 text-4xl mb-3" />
@@ -46,23 +45,11 @@ const VaultDashboardPage: NextPage = () => {
           {/* Show user address */}
           <VaultDetailWidget vaultAddress={userAddress!} />
 
-          {/* FIXME: Put it inside AAVE */}
-          {/* <AAVEPositionProvider contractAddress={userAddress!}>
-            <VaultCard
-              vaultAddress={userAddress!} // FIXME: See how to fix it
-              lendingValue={10000}
-              borrowValue={2000}
-              lendingAPY={4.5}
-              borrowAPY={3.5}
-              healthRatio={2}
-              strategies={["automation", "reinvest"]}
-            />
-          </AAVEPositionProvider> */}
-
           {(vaultAddresses as Address[]) &&
             (vaultAddresses as Address[]).map(
               (vaultAddress: Address, index: number) => {
                 return (
+                  // FIXME: Remove AAVE layout here
                   <AAVEPositionProvider
                     key={index}
                     contractAddress={vaultAddress}
@@ -71,23 +58,12 @@ const VaultDashboardPage: NextPage = () => {
                       vaultAddress={vaultAddress}
                       vaultIndex={index + 1}
                     />
-
-                    {/* <VaultCard
-                      vaultAddress={vaultAddress}
-                      lendingValue={20000}
-                      borrowValue={0}
-                      lendingAPY={4.5}
-                      borrowAPY={0}
-                      healthRatio={100}
-                      strategies={["automation", "reinvest"]}
-                    /> */}
                   </AAVEPositionProvider>
                 );
               }
             )}
 
           {/* {error && error.message} */}
-          <NewVaultCard />
 
           <PopupButton
             ButtonComponent={NewVaultWidget}

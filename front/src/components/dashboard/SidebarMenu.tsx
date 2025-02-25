@@ -12,10 +12,12 @@ import { IoIosLogOut } from "react-icons/io";
 import { useAccount, useDisconnect } from "wagmi";
 import { Address } from "viem";
 import { useListVaults, useVault } from "@/utils/hook/vault";
-import { getMenuColorStyle } from "@/utils/vault/colors";
+import { getMenuColorStyle, getVaultColor } from "@/utils/vault/colors";
 import { FaVault } from "react-icons/fa6";
+import { usePathname } from "next/navigation";
 
 const VaultCardItem = ({ vaultAddress }: { vaultAddress: Address }) => {
+  const pathname = usePathname();
   const { data: vaultName } = useVault(vaultAddress, "name");
   const { data: vaultColorIndex } = useVault(vaultAddress, "color");
 
@@ -23,7 +25,13 @@ const VaultCardItem = ({ vaultAddress }: { vaultAddress: Address }) => {
     <li className="mb-2">
       <Link
         href={`/vaults/${vaultAddress}`}
-        className={`flex items-center p-2 ${getMenuColorStyle(vaultColorIndex as number)} rounded`}
+        title={`${vaultName} detail`}
+        // className={`flex items-center p-2 ${getMenuColorStyle(vaultColorIndex as number)} rounded`}
+        className={`w-full flex items-center p-2 rounded ${
+          pathname === `/vaults/${vaultAddress}`
+            ? `${getVaultColor(vaultColorIndex as number)} font-semibold`
+            : `${getMenuColorStyle(vaultColorIndex as number)}`
+        }`}
       >
         {vaultName ? (
           <FaVault className={`mx-2 text-2xl`} />
@@ -38,6 +46,8 @@ const VaultCardItem = ({ vaultAddress }: { vaultAddress: Address }) => {
 };
 
 const SidebarMenu = () => {
+  const pathname = usePathname();
+
   const { address: userAddress } = useAccount();
   const { disconnect } = useDisconnect();
 
@@ -97,7 +107,11 @@ const SidebarMenu = () => {
               <Link
                 title="Dashboard"
                 href="/dashboard"
-                className="flex items-center p-2 hover:bg-gray-700 rounded"
+                className={`flex items-center p-2 rounded ${
+                  pathname === "/dashboard"
+                    ? "bg-gray-700 text-white font-semibold"
+                    : "hover:bg-gray-700"
+                }`}
               >
                 <BiBarChartSquare className="mx-2 text-2xl" />
                 <span>Dashboard</span>
@@ -108,7 +122,11 @@ const SidebarMenu = () => {
                 <Link
                   title="Vaults"
                   href="/vaults"
-                  className="w-full flex items-center p-2 rounded hover:bg-gray-700 rounded"
+                  className={`w-full flex items-center p-2 rounded ${
+                    pathname === "/vaults"
+                      ? "bg-gray-700 text-white font-semibold"
+                      : "hover:bg-gray-700"
+                  }`}
                 >
                   <IoWallet className="mx-2 text-2xl" />
                   <span>Vaults</span>

@@ -27,7 +27,7 @@ export default function DashboardLayout({
       <div className="flex">
         <SidebarMenu />
         <main className="bg-gray-50 w-full h-screen overflow-auto p-6">
-          {children}
+          <section className="container mx-auto">{children}</section>
         </main>
       </div>
     </>
