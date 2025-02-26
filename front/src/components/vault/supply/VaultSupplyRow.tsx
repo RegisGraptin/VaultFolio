@@ -36,7 +36,7 @@ const VaultSupplyRow = ({
       onClick={onClick}
       disabled={userBalanceToken?.value === BigInt(0)}
     >
-      <svg
+      {/* <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-5 w-5"
         viewBox="0 0 20 20"
@@ -47,8 +47,8 @@ const VaultSupplyRow = ({
           d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
           clipRule="evenodd"
         />
-      </svg>
-      {/* Supply */}
+      </svg> */}
+      Supply
     </button>
   );
 
@@ -61,7 +61,7 @@ const VaultSupplyRow = ({
       onClick={onClick}
       disabled={vaultSupplyBalance?.value === BigInt(0)}
     >
-      <svg
+      {/* <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-5 w-5"
         viewBox="0 0 20 20"
@@ -72,8 +72,8 @@ const VaultSupplyRow = ({
           d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
           clipRule="evenodd"
         />
-      </svg>
-      {/* Withdraw */}
+      </svg> */}
+      Withdraw
     </button>
   );
 
@@ -165,7 +165,7 @@ const VaultSupplyRow = ({
           </div>
         </td>
         <td className="px-6 py-4">
-          <div className="flex space-x-2">
+          <div className="flex justify-center space-x-2">
             <PopupButton
               ButtonComponent={SupplyButton}
               ModalComponent={VaultSupplyFormModal}

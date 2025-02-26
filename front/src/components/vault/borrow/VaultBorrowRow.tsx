@@ -78,7 +78,9 @@ const VaultBorrowRow = ({
       onClick={onClick}
       disabled={false} // FIXME: check health factor
     >
-      <GiReceiveMoney className="h-5 w-5" />
+      <span className="flex items-center">
+        <GiReceiveMoney className="h-5 w-5 mr-2" /> Borrow
+      </span>
     </button>
   );
 
@@ -153,7 +155,7 @@ const VaultBorrowRow = ({
           </div>
         </td>
         <td className="px-6 py-4">
-          <div className="flex space-x-2">
+          <div className="flex justify-center space-x-2">
             <PopupButton
               ButtonComponent={BorrowButton}
               ModalComponent={VaultBorrowFormModal}

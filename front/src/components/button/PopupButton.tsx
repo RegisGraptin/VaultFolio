@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 interface PopupButtonProps<T = {}> {
   ButtonComponent: React.ComponentType<{ onClick: () => void }>;
@@ -18,26 +19,26 @@ const PopupButton = <T,>({
   };
 
   const onModalClose = () => {
-    setIsOpen(false); // Close the modal
+    setIsOpen(false);
     if (modalProps && typeof (modalProps as any).onClose === "function") {
-      (modalProps as any).onClose(); // Call the additional onClose function
+      (modalProps as any).onClose();
     }
   };
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-[999] grid h-screen w-screen place-items-center bg-opacity-60 backdrop-blur-sm transition-opacity"
+      onClick={handleClose}
+      aria-hidden={!isOpen}
+    >
+      <ModalComponent {...(modalProps as T)} onClose={onModalClose} />
+    </div>
+  );
 
   return (
     <>
       <ButtonComponent onClick={() => setIsOpen(true)} />
-
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[999] grid h-screen w-screen place-items-center bg-opacity-60 backdrop-blur-sm transition-opacity"
-          onClick={handleClose}
-          aria-hidden={!isOpen}
-        >
-          {/* Order in the props are important here */}
-          <ModalComponent {...(modalProps as T)} onClose={onModalClose} />
-        </div>
-      )}
+      {isOpen && createPortal(modalContent, document.body)}
     </>
   );
 };
