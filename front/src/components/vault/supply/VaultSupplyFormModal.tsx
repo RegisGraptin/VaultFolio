@@ -11,9 +11,10 @@ import {
 } from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
-import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import { useReadOracle } from "@/utils/hook/oracle";
 import {
   convertAssetToUSD,
+  formatBalance,
   validateAndFormatAmount,
 } from "@/utils/tokens/balance";
 import { useAllowance } from "@/utils/hook/token";
@@ -22,12 +23,14 @@ interface ModalProps {
   onClose: () => void;
   vaultAddress: Address;
   assetAddress: Address;
+  supplyApy: Number | undefined;
 }
 
 const VaultSupplyFormModal: React.FC<ModalProps> = ({
   onClose,
   vaultAddress,
   assetAddress,
+  supplyApy,
 }) => {
   const { address: userAddress } = useAccount();
 
@@ -40,13 +43,9 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     token: assetAddress,
   });
 
-  const { data: addressPriceOracle } = useOracle("getPriceOracle");
-
-  const { data: oraclePriceUSD } = usePriceOracle(
-    addressPriceOracle,
-    "getAssetPrice",
-    [getAddress(assetAddress)]
-  );
+  const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
+    assetAddress,
+  });
 
   // Fetch user allowance
   const {
@@ -59,22 +58,21 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     writeContract: writeApproveToken,
     data: txHashApprove,
     isPending: isApproving,
-    error: approveError,
-    isSuccess: isApproved,
   } = useWriteContract();
 
-  const { isSuccess: isTxApproveConfirmed } = useWaitForTransactionReceipt({
-    hash: txHashApprove,
-  });
+  const { isSuccess: isTxApproveConfirmed, isLoading: isTxApproveLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashApprove,
+    });
 
+  // Refetch approval data after approval update
   useEffect(() => {
     if (isTxApproveConfirmed) {
-      // Refetch allowance to update the UI
-      console.log("Refreshing the data");
       refetchAllowance();
     }
   }, [isTxApproveConfirmed]);
 
+  // Supply action
   const {
     writeContract: writeSupplyToken,
     data: txHashSupply,
@@ -82,9 +80,10 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     error: supplyError,
   } = useWriteContract();
 
-  const { isSuccess: isTxSupplyConfirmed } = useWaitForTransactionReceipt({
-    hash: txHashSupply,
-  });
+  const { isSuccess: isTxSupplyConfirmed, isLoading: isTxSupplyLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashSupply,
+    });
 
   useEffect(() => {
     if (isTxSupplyConfirmed) {
@@ -124,8 +123,10 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     return (
       amount == "" ||
       Number(amount) == 0 ||
+      Number(amount) < 0 ||
       !isNeedsApproval() ||
       isApproving ||
+      isTxApproveLoading ||
       isLoadingAllowance
     );
   };
@@ -134,8 +135,13 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     return (
       amount == "" ||
       Number(amount) == 0 ||
+      Number(amount) < 0 ||
+      (userBalance &&
+        parseUnits(amount.toString(), userBalance?.decimals) >
+          userBalance?.value) ||
       isSupplying ||
       isNeedsApproval() ||
+      isTxSupplyLoading ||
       isLoadingAllowance
     );
   };
@@ -189,7 +195,7 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
               <span className="text-sm text-gray-500">Wallet balance</span>
               <span className="text-sm font-medium text-gray-700">
                 {userBalance
-                  ? formatUnits(userBalance.value, token.decimals)
+                  ? formatBalance(userBalance.value, token.decimals)
                   : "0.00"}
               </span>
               <button
@@ -206,7 +212,7 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-gray-300 focus-within:border-blue-500 transition-colors">
             <input
               type="number"
-              step="any"
+              step={Math.pow(10, -token.decimals)}
               min="0"
               placeholder="0.00"
               value={amount}
@@ -227,8 +233,8 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
 
           <div className="mt-2 text-right text-sm text-gray-500">
             ≈ $
-            {userBalance && oraclePriceUSD && amount
-              ? `${convertAssetToUSD(parseUnits(amount, userBalance.decimals), userBalance.decimals, oraclePriceUSD as bigint)}`
+            {userBalance && oraclePriceUsd && amount
+              ? `${convertAssetToUSD(parseUnits(amount, userBalance.decimals), userBalance.decimals, oraclePriceUsd as bigint)}`
               : "0.00"}{" "}
             USD
           </div>
@@ -236,39 +242,26 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
 
         {/* Transaction Details */}
         <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Supply APY</span>
-            <span className="font-medium text-gray-700">0%</span>
-          </div>
+          {supplyApy !== undefined && (
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500">Supply APY</span>
+              <span className="font-medium text-gray-700">
+                {supplyApy?.toFixed(2)}%
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Collateralization</span>
             <span className="text-green-600 font-medium">Enabled</span>
           </div>
         </div>
 
-        {/* Gas Estimation */}
-        {/* <div className="mb-6 flex items-center text-sm text-gray-500">
-          <svg
-            className="w-4 h-4 mr-1 text-blue-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          Gas fee: $0.00
-        </div> */}
-
         {/* Action Buttons */}
         <div className="space-y-3">
+          {/* FIXME: Smooth show up */}
           {isNeedsApproval() && (
             <LoadingButton
-              isLoading={isApproving}
+              isLoading={isApproving || isTxApproveLoading}
               onClick={() => approveToken()}
               className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
               disabled={isApproveButtonDisabled()}
@@ -278,7 +271,7 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
           )}
 
           <LoadingButton
-            isLoading={isSupplying}
+            isLoading={isSupplying || isTxSupplyLoading}
             onClick={() => supplyToken()}
             disabled={isSupplyButtonDisabled()}
             className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}

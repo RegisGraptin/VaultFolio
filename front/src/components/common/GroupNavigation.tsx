@@ -1,13 +1,16 @@
 import React from "react";
 
 type NavigationProps = {
+  tabs: string[];
   activeTab: string;
   setActiveTab: (tab: string) => void;
 };
 
-export const VAULT_VIEW_TABS = ["Dashboard", "Lending", "Borrowing"];
-
-const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
+const GroupNavigation = ({
+  tabs,
+  activeTab,
+  setActiveTab,
+}: NavigationProps) => {
   const buttonRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
   const [backgroundStyles, setBackgroundStyles] = React.useState({
     width: 0,
@@ -15,7 +18,7 @@ const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
   });
 
   React.useEffect(() => {
-    const activeIndex = VAULT_VIEW_TABS.findIndex((tab) => tab === activeTab);
+    const activeIndex = tabs.findIndex((tab) => tab === activeTab);
     const activeButton = buttonRefs.current[activeIndex];
 
     if (activeButton) {
@@ -27,9 +30,8 @@ const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
   }, [activeTab]);
 
   return (
-    <div className="mb-2">
+    <>
       <div className="relative inline-flex bg-gray-100 rounded-full p-1.5 shadow-inner">
-        {/* Animated background */}
         <div
           className="absolute inset-y-1.5 bg-white rounded-full shadow-sm transition-all duration-300 ease-out"
           style={{
@@ -39,7 +41,7 @@ const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
         />
 
         <div className="relative z-10 flex space-x-1">
-          {VAULT_VIEW_TABS.map((tab, index) => (
+          {tabs.map((tab, index) => (
             <button
               key={tab}
               ref={(el) => {
@@ -57,8 +59,8 @@ const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
-export default VaultNavigation;
+export default GroupNavigation;

@@ -211,38 +211,36 @@ const TokenSupplyRow = ({
 const TotalSupplyWidget = () => {
   return (
     <WidgetLayout>
+      <h2 className="text-lg font-semibold">Your supplies</h2>
       <div>
-        <h2 className="text-lg font-semibold">Your supplies</h2>
-        <div>
-          <table className="w-full table-auto min-w-max">
-            <thead className="text-center">
-              <tr>
-                <th scope="col" className="px-6 py-3">
-                  Assets
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Balance
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Value
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(TOKEN_ASSETS).map(
-                ([tokenAddress, token], index) => {
-                  return (
-                    <TokenSupplyRow
-                      key={index}
-                      tokenAddress={getAddress(tokenAddress)}
-                      token={token}
-                    />
-                  );
-                }
-              )}
-            </tbody>
-          </table>
-        </div>
+        <table className="w-full table-auto min-w-max">
+          <thead className="text-center">
+            <tr>
+              <th scope="col" className="px-6 py-3">
+                Assets
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Balance
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Value
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(TOKEN_ASSETS).map(
+              ([tokenAddress, token], index) => {
+                return (
+                  <TokenSupplyRow
+                    key={index}
+                    tokenAddress={getAddress(tokenAddress)}
+                    token={token}
+                  />
+                );
+              }
+            )}
+          </tbody>
+        </table>
       </div>
     </WidgetLayout>
   );

@@ -34,6 +34,7 @@ const VaultDetailWidget = ({
   const { data: vaultName } = useVault(vaultAddress, "name");
   const { data: vaultColorIndex } = useVault(vaultAddress, "color");
 
+  // FIXME: balance not on lending be careful here
   const { totalBalance, isLoading } = usePortfolioValue({ vaultAddress });
 
   const data = [

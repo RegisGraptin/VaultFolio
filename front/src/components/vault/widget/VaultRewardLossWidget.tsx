@@ -1,4 +1,6 @@
+import GroupNavigation from "@/components/common/GroupNavigation";
 import WidgetLayout from "@/components/dashboard/widget/WidgetLayout";
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -34,6 +36,9 @@ export default function VaultRewardLossWidget() {
   const maxBorrowing = Math.max(...data.map((item) => item.borrowingAbs));
   const maxValue = Math.max(maxLending, maxBorrowing);
 
+  const TIMEFRAMES = ["Daily", "Weekly"];
+  const [selectedTimeframe, setSelectedTimeframe] = React.useState("Daily");
+
   return (
     <WidgetLayout>
       <div className="flex justify-between items-center mb-6">
@@ -43,14 +48,12 @@ export default function VaultRewardLossWidget() {
           </h2>
           <p className="text-sm text-gray-500">Weekly yield analysis</p>
         </div>
-        <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
-          <button className="px-3 py-1 bg-white rounded-md text-sm font-medium shadow-sm">
-            Daily
-          </button>
-          <button className="px-3 py-1 rounded-md text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm">
-            Weekly
-          </button>
-        </div>
+
+        <GroupNavigation
+          tabs={TIMEFRAMES}
+          activeTab={selectedTimeframe}
+          setActiveTab={setSelectedTimeframe}
+        />
       </div>
 
       <div className="grid grid-cols-3 ">

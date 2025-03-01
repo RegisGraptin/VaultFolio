@@ -3,6 +3,7 @@ import { Address, getAddress } from "viem";
 
 import IPoolAddressesProvider from "@/abi/IPoolAddressesProvider.json";
 import IPriceOracle from "@/abi/IPriceOracleGetter.json";
+import { useEffect, useState } from "react";
 
 export function useOracle<TFunctionName extends string>(
   functionName: TFunctionName,
@@ -31,3 +32,29 @@ export function usePriceOracle<TFunctionName extends string>(
     },
   });
 }
+
+export const useReadOracle = ({
+  assetAddress,
+}: {
+  assetAddress: Address | string;
+}) => {
+  const [oraclePriceUsd, setOraclePrice] = useState<BigInt>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const { data: dataAddressPriceOracle } = useOracle("getPriceOracle");
+
+  const { data: dataOraclePriceUSD } = usePriceOracle(
+    dataAddressPriceOracle,
+    "getAssetPrice",
+    [getAddress(assetAddress)]
+  );
+
+  useEffect(() => {
+    if (!dataOraclePriceUSD) return;
+
+    setOraclePrice(dataOraclePriceUSD as bigint);
+    setIsLoading(false);
+  }, [dataOraclePriceUSD]);
+
+  return { oraclePriceUsd, isLoading };
+};

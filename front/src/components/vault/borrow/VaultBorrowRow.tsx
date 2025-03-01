@@ -10,6 +10,7 @@ import VaultBorrowFormModal from "./VaultBorrowFormModal";
 import VaultRepayFormModal from "./VaultRepayFormModal";
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
+import ActionButton from "@/components/button/ActionButton";
 
 const VaultBorrowRow = ({
   vaultAddress,
@@ -28,7 +29,7 @@ const VaultBorrowRow = ({
     undefined
   );
 
-  const { data: userBalanceToken } = useBalance({
+  const { data: userBalanceToken, refetch: refetchUserBalance } = useBalance({
     address: userAddress,
     token: assetAddress,
   });
@@ -41,10 +42,11 @@ const VaultBorrowRow = ({
     [getAddress(assetAddress)]
   );
 
-  const { data: userDebtTokenBalance } = useBalance({
-    address: vaultAddress,
-    token: debtToken.address,
-  });
+  const { data: userDebtTokenBalance, refetch: refetchVaultBalance } =
+    useBalance({
+      address: vaultAddress,
+      token: debtToken.address,
+    });
 
   // Get asset information from the AAVE pool
   const { data: reserveData } = useAave("getReserveData", [assetAddress]);
@@ -70,33 +72,25 @@ const VaultBorrowRow = ({
   }, [reserveData]);
 
   const BorrowButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
-                 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+    <ActionButton
+      label="Borrow"
+      Icon={GiReceiveMoney}
       aria-label={`Borrow ${token.name}`}
       onClick={onClick}
       disabled={false} // FIXME: check health factor
-    >
-      <span className="flex items-center">
-        <GiReceiveMoney className="h-5 w-5 mr-2" /> Borrow
-      </span>
-    </button>
+    />
   );
 
   const RepayButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
-                 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+    <ActionButton
+      label="Repay"
+      Icon={GiPayMoney}
       aria-label={`Repay ${token.name}`}
       onClick={onClick}
       disabled={
         userDebtTokenBalance && userDebtTokenBalance.value === BigInt(0)
       } // FIXME: check if borrow balance > 0
-    >
-      <GiPayMoney className="h-5 w-5" />
-    </button>
+    />
   );
 
   // Skip the asset if it cannot be borrow
@@ -106,10 +100,10 @@ const VaultBorrowRow = ({
 
   return (
     <>
-      <tr className="gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+      <tr className="hover:bg-gray-100 rounded-lg transition-colors">
         <th
           scope="row"
-          className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          className="flex items-center gap-4 p-3 rounded-lg transition-colors text-left"
         >
           <VautlAssetInfo
             token={token}
@@ -120,7 +114,9 @@ const VaultBorrowRow = ({
         <td className="px-6 py-4">
           {apy !== undefined && (
             <div className="text-center flex-shrink-0">
-              <div className="text-sm text-blue-600 font-medium">
+              <div
+                className={`text-sm font-medium ${Number(apy) > 0 ? "text-red-700" : ""}`}
+              >
                 {apy?.toFixed(2)}%
               </div>
             </div>
@@ -162,6 +158,11 @@ const VaultBorrowRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                onClose: async () => {
+                  // Refresh the vault & user balance
+                  await refetchUserBalance();
+                  await refetchVaultBalance();
+                },
               }}
             />
 
@@ -171,6 +172,11 @@ const VaultBorrowRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                onClose: async () => {
+                  // Refresh the vault & user balance
+                  await refetchUserBalance();
+                  await refetchVaultBalance();
+                },
               }}
             />
           </div>

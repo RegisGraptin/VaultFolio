@@ -1,11 +1,17 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Address, formatUnits, getAddress, parseUnits } from "viem";
-import { useAccount, useBalance, useWriteContract } from "wagmi";
-import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import {
+  useAccount,
+  useBalance,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { useOracle, usePriceOracle, useReadOracle } from "@/utils/hook/oracle";
 import {
   convertAssetToUSD,
+  formatBalance,
   validateAndFormatAmount,
 } from "@/utils/tokens/balance";
 import LoadingButton from "@/components/button/LoadingButton";
@@ -23,23 +29,13 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
   vaultAddress,
   assetAddress,
 }) => {
-  const { address: userAddress } = useAccount();
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
 
-  const { data: addressPriceOracle } = useOracle("getPriceOracle");
-
-  const { data: oraclePriceUSD } = usePriceOracle(
-    addressPriceOracle,
-    "getAssetPrice",
-    [getAddress(assetAddress)]
-  );
-
-  const { data: userBalance } = useBalance({
-    address: userAddress,
-    token: assetAddress,
+  const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
+    assetAddress,
   });
 
   const { data: vaultBalance } = useBalance({
@@ -54,6 +50,11 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
     error: withdrawError,
   } = useWriteContract();
 
+  const { isSuccess: isTxWithdrawConfirmed, isLoading: isTxWithdrawLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashWithdraw,
+    });
+
   const withdrawToken = () => {
     let formattedAmount = validateAndFormatAmount(amount, token.decimals);
     if (!formattedAmount) return;
@@ -66,9 +67,23 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
     });
   };
 
+  useEffect(() => {
+    if (isTxWithdrawConfirmed) {
+      onClose();
+    }
+  }, [isTxWithdrawConfirmed]);
+
   const isWithdrawButtonDisabled = () => {
-    // FIXME:
-    return false;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      Number(amount) < 0 ||
+      (vaultBalance &&
+        parseUnits(amount.toString(), vaultBalance?.decimals) >
+          vaultBalance?.value) ||
+      isWithdrawing ||
+      isTxWithdrawLoading
+    );
   };
 
   return (
@@ -110,7 +125,7 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
               <span className="text-sm text-gray-500">Vault balance</span>
               <span className="text-sm font-medium text-gray-700">
                 {vaultBalance
-                  ? formatUnits(vaultBalance.value, vaultBalance.decimals)
+                  ? formatBalance(vaultBalance.value, vaultBalance.decimals)
                   : "0.00"}
               </span>
               <button
@@ -152,8 +167,8 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
 
           <div className="mt-2 text-right text-sm text-gray-500">
             ≈ $
-            {vaultBalance && oraclePriceUSD && amount
-              ? `${convertAssetToUSD(parseUnits(amount, vaultBalance.decimals), vaultBalance.decimals, oraclePriceUSD as bigint)}`
+            {vaultBalance && oraclePriceUsd && amount
+              ? `${convertAssetToUSD(parseUnits(amount, vaultBalance.decimals), vaultBalance.decimals, oraclePriceUsd as bigint)}`
               : "0.00"}{" "}
             USD
           </div>
@@ -165,7 +180,7 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
             <span className="text-gray-500">Remaining supply</span>
             <span className="font-medium text-gray-700">
               {vaultBalance
-                ? formatUnits(
+                ? formatBalance(
                     vaultBalance.value -
                       parseUnits(amount, vaultBalance.decimals),
                     vaultBalance.decimals
@@ -179,7 +194,7 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
         {/* Action Buttons */}
         <div className="space-y-3">
           <LoadingButton
-            isLoading={isWithdrawing}
+            isLoading={isWithdrawing || isTxWithdrawLoading}
             onClick={withdrawToken}
             disabled={isWithdrawButtonDisabled()}
             className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}

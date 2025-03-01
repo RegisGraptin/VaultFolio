@@ -24,7 +24,7 @@ const VaultDetailManageView = ({ activeTab, vaultAddress }: ContentProps) => {
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
           <div className="w-full flex-shrink-0 p-4">
-            <VaultDetailDashboardView />
+            <VaultDetailDashboardView vaultAddress={vaultAddress} />
           </div>
           <div className="w-full flex-shrink-0 p-4">
             <VaultDetailLendingView vaultAddress={vaultAddress} />

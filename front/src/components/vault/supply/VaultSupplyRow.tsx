@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { MdOutlinePayments } from "react-icons/md";
+import { PiPiggyBank } from "react-icons/pi";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, getAddress } from "viem";
 import { useAccount, useBalance } from "wagmi";
@@ -12,6 +14,7 @@ import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
 import VautlAssetInfo from "../common/VaultAssetInfo";
 import VaultWithdrawFormModal from "./VaultWithdrawFormModal";
+import ActionButton from "@/components/button/ActionButton";
 
 const VaultSupplyRow = ({
   vaultAddress,
@@ -28,53 +31,23 @@ const VaultSupplyRow = ({
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
 
   const SupplyButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
-                 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+    <ActionButton
+      label="Supply"
+      Icon={PiPiggyBank}
       aria-label={`Supply ${token.name}`}
       onClick={onClick}
       disabled={userBalanceToken?.value === BigInt(0)}
-    >
-      {/* <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-          clipRule="evenodd"
-        />
-      </svg> */}
-      Supply
-    </button>
+    />
   );
 
   const WithdrawButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button
-      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2
-                 focus:ring-blue-500 focus:ring-offset-2
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+    <ActionButton
+      label="Withdraw"
+      Icon={MdOutlinePayments}
       aria-label={`Withdraw ${token.name}`}
       onClick={onClick}
       disabled={vaultSupplyBalance?.value === BigInt(0)}
-    >
-      {/* <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-      >
-        <path
-          fillRule="evenodd"
-          d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-          clipRule="evenodd"
-        />
-      </svg> */}
-      Withdraw
-    </button>
+    />
   );
 
   const { data: userBalanceToken, refetch: refetchUserBalance } = useBalance({
@@ -117,10 +90,15 @@ const VaultSupplyRow = ({
 
   return (
     <>
-      <tr className="gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+      <tr
+        className={`
+        hover:bg-gray-100 rounded-lg transition-colors`}
+      >
         <th
           scope="row"
-          className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          className={`
+            ${Number(vaultSupplyBalance?.value) > 0 ? "bg-gray-100" : ""} 
+            flex items-center gap-4 p-3 rounded-lg transition-colors text-left`}
         >
           <VautlAssetInfo
             token={token}
@@ -131,7 +109,9 @@ const VaultSupplyRow = ({
         <td className="px-6 py-4">
           {apy !== undefined && (
             <div className="text-center flex-shrink-0">
-              <div className="text-sm text-blue-600 font-medium">
+              <div
+                className={`text-sm font-medium ${Number(apy) > 0 ? "text-green-700" : ""}`}
+              >
                 {apy?.toFixed(2)}%
               </div>
             </div>
@@ -174,12 +154,10 @@ const VaultSupplyRow = ({
                 assetAddress,
                 onClose: async () => {
                   // Refresh the vault & user balance
-                  refetchUserBalance().then(({ data }) => {
-                    console.log("Refetched balance:", data);
-                  });
-
+                  await refetchUserBalance();
                   await refetchVaultBalance();
                 },
+                supplyApy: apy,
               }}
             />
             <PopupButton
@@ -188,6 +166,12 @@ const VaultSupplyRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                onClose: async () => {
+                  // Refresh the vault & user balance
+                  await refetchUserBalance();
+                  await refetchVaultBalance();
+                },
+                supplyApy: apy,
               }}
             />
           </div>
