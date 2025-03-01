@@ -12,7 +12,7 @@ import VaultSupplyFormModal from "./VaultSupplyFormModal";
 
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
-import VautlAssetInfo from "../common/VaultAssetInfo";
+import VaultAssetInfo from "../common/VaultAssetInfo";
 import VaultWithdrawFormModal from "./VaultWithdrawFormModal";
 import ActionButton from "@/components/button/ActionButton";
 
@@ -100,7 +100,7 @@ const VaultSupplyRow = ({
             ${Number(vaultSupplyBalance?.value) > 0 ? "bg-gray-100" : ""} 
             flex items-center gap-4 p-3 rounded-lg transition-colors text-left`}
         >
-          <VautlAssetInfo
+          <VaultAssetInfo
             token={token}
             userBalanceToken={userBalanceToken}
             oraclePriceUSD={oraclePriceUSD as bigint}

@@ -11,6 +11,7 @@ import PopupButton from "@/components/button/PopupButton";
 import { FaPlusCircle } from "react-icons/fa";
 import CreateVaultFormModal from "@/components/dashboard/form/CreateVaultFormModal";
 import TotalVaultOverviewWidget from "@/components/vault/widget/TotalVaultOverviewWidget";
+import { useListVaults } from "@/utils/hook/vault";
 
 const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <div
@@ -24,18 +25,13 @@ const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 
 const VaultDashboardPage: NextPage = () => {
   const { address: userAddress } = useAccount();
-
-  const { data: vaultAddresses = [] } = useReadContract({
-    address: getAddress(process.env.NEXT_PUBLIC_MANAGER_ADDRESS!),
-    abi: Manager.abi,
-    functionName: "getVaults",
-    args: [userAddress],
-  });
+  const { data: vaultAddresses } = useListVaults(userAddress);
+  
 
   return (
     <DashboardLayout>
       <section className="container mx-auto">
-        <TotalVaultOverviewWidget />
+        <TotalVaultOverviewWidget vaultAddresses={vaultAddresses as Address[]} />
 
         {/* <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
           List of vaults

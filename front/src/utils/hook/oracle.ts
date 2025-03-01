@@ -1,5 +1,5 @@
-import { useReadContract } from "wagmi";
-import { Address, getAddress } from "viem";
+import { useReadContract, useReadContracts } from "wagmi";
+import { Abi, Address, getAddress } from "viem";
 
 import IPoolAddressesProvider from "@/abi/IPoolAddressesProvider.json";
 import IPriceOracle from "@/abi/IPriceOracleGetter.json";
@@ -57,4 +57,25 @@ export const useReadOracle = ({
   }, [dataOraclePriceUSD]);
 
   return { oraclePriceUsd, isLoading };
+};
+
+export const useOracleOnMultipleTokens = ({
+  tokenAddresses,
+}: {
+  tokenAddresses: Address[] | string[];
+}) => {
+  const { data: addressPriceOracle } = useOracle("getPriceOracle");
+  const { data: tokenPrices, isLoading } = useReadContracts({
+    query: { enabled: !!addressPriceOracle },
+    contracts: tokenAddresses.map((tokenAddress) => ({
+      address: addressPriceOracle
+        ? getAddress(addressPriceOracle as string)
+        : undefined,
+      abi: IPriceOracle.abi as Abi,
+      functionName: "getAssetPrice",
+      args: [getAddress(tokenAddress)],
+    })),
+  });
+
+  return { data: tokenPrices, isLoading };
 };

@@ -13,7 +13,7 @@ const VaultDetailDashboardView = ({
       <div className="grid grid-cols-1 gap-4">
         <VaultDetailWidget vaultAddress={vaultAddress} />
 
-        <VaultRewardLossWidget />
+        <VaultRewardLossWidget vaultAddress={vaultAddress} />
       </div>
     </>
   );

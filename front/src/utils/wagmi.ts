@@ -1,4 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "viem";
 import { scroll, scrollSepolia } from "wagmi/chains";
 
 export const config = getDefaultConfig({
@@ -9,5 +10,8 @@ export const config = getDefaultConfig({
     scrollSepolia,
     // ...(process.env.DEV_ENV === "true" ? [scrollSepolia] : []),
   ],
+  transports: {
+    [scrollSepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_HTTP!),
+  },
   ssr: true,
 });

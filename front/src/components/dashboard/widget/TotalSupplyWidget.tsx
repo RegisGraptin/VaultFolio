@@ -1,9 +1,9 @@
 "use client";
 
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
-import VautlAssetInfo from "@/components/vault/common/VaultAssetInfo";
+import VaultAssetInfo from "@/components/vault/common/VaultAssetInfo";
 import WidgetLayout from "./WidgetLayout";
-import { Balance, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import { Balance, LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { useAccount, useBalance } from "wagmi";
 import { useListVaults, useVault } from "@/utils/hook/vault";
 import { Address, getAddress } from "viem";
@@ -29,7 +29,7 @@ const VaultTokenSupply = ({
 }) => {
   const { data: vaultBalance } = useBalance({
     address: vaultAddress,
-    token: tokenAddress,
+    token: LENDING_TOKENS[tokenAddress.toLowerCase()].address,
   });
 
   const { data: vaultName } = useVault(vaultAddress as string, "name");
@@ -128,7 +128,7 @@ const TokenSupplyRow = ({
 
   let totalBalance: Balance = {
     decimals: token.decimals,
-    symbol: token.symbol,
+    // symbol: token.symbol,
     value: totalValue,
   };
 
@@ -146,9 +146,11 @@ const TokenSupplyRow = ({
       >
         <th
           scope="row"
-          className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+          className={`
+            ${Number(totalBalance?.value) > 0 ? "bg-gray-50" : ""} 
+            flex items-center gap-4 p-3 rounded-lg transition-colors text-left`}
         >
-          <VautlAssetInfo
+          <VaultAssetInfo
             token={token}
             userBalanceToken={totalBalance}
             oraclePriceUSD={oraclePriceUSD as bigint}
@@ -185,7 +187,7 @@ const TokenSupplyRow = ({
         <VaultTokenSupply
           key={index}
           tokenAddress={tokenAddress}
-          vaultAddress={vaultAddress}
+          vaultAddress={vaultAddress as Address}
           oraclePriceUSD={oraclePriceUSD}
           updateBalance={updateBalance}
           getBalancePercent={getBalancePercent}

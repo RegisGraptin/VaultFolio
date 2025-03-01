@@ -1,6 +1,6 @@
 import { Address } from "viem";
 import WidgetLayout from "./WidgetLayout";
-import { usePortfolioValue, useVault } from "@/utils/hook/vault";
+import { usePortfolioLending, usePortfolioValue, useVault } from "@/utils/hook/vault";
 import { getMenuColorStyle, getVaultColor } from "@/utils/vault/colors";
 import { displayFormattedBalance } from "@/utils/tokens/balance";
 import {
@@ -35,7 +35,7 @@ const VaultDetailWidget = ({
   const { data: vaultColorIndex } = useVault(vaultAddress, "color");
 
   // FIXME: balance not on lending be careful here
-  const { totalBalance, isLoading } = usePortfolioValue({ vaultAddress });
+  const { totalLending, lendingAPY, isLoading } = usePortfolioLending({ vaultAddress });
 
   const data = [
     {
@@ -109,16 +109,16 @@ const VaultDetailWidget = ({
 
         {/* Display total value */}
         <div className="pt-5">
-          <p className="text-sm text-gray-500 mt-1">Total value</p>
+          <p className="text-sm text-gray-500 mt-1">Total lending value</p>
           <h2 className="text-xl font-semibold text-gray-700">
-            ${displayFormattedBalance(totalBalance)}
+            ${displayFormattedBalance(totalLending)}
           </h2>
         </div>
 
         {/* Display reward rate */}
         <div className="pt-5">
           <p className="text-sm text-gray-500 mt-1">Lending Yield</p>
-          <h2 className="text-xl font-semibold text-gray-700">10.22%</h2>
+          <h2 className="text-xl font-semibold text-gray-700">{displayFormattedBalance(lendingAPY)}%</h2>
         </div>
 
         {/* Display reward history */}

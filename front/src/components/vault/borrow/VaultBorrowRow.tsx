@@ -1,7 +1,7 @@
 import { DEBT_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { Address, erc20Abi, getAddress } from "viem";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
-import VautlAssetInfo from "../common/VaultAssetInfo";
+import VaultAssetInfo from "../common/VaultAssetInfo";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
 import { useEffect, useState } from "react";
@@ -105,7 +105,7 @@ const VaultBorrowRow = ({
           scope="row"
           className="flex items-center gap-4 p-3 rounded-lg transition-colors text-left"
         >
-          <VautlAssetInfo
+          <VaultAssetInfo
             token={token}
             userBalanceToken={userBalanceToken}
             oraclePriceUSD={oraclePriceUSD as bigint}

@@ -1,9 +1,5 @@
 import WidgetLayout from "@/components/dashboard/widget/WidgetLayout";
-import {
-  usePortfolioBorrowing,
-  usePortfolioLending,
-  usePortfolioValue,
-} from "@/utils/hook/vault";
+import { usePortfolioBorrowing, usePortfolioLending } from "@/utils/hook/vault";
 import { displayFormattedBalance } from "@/utils/tokens/balance";
 import React from "react";
 import { Address } from "viem";

@@ -3,7 +3,7 @@ import { Balance, Token } from "@/utils/tokens/tokens";
 import Image from "next/image";
 import { GetBalanceData } from "wagmi/query";
 
-const VautlAssetInfo = ({
+const VaultAssetInfo = ({
   token,
   userBalanceToken,
   oraclePriceUSD,
@@ -67,4 +67,4 @@ const VautlAssetInfo = ({
   );
 };
 
-export default VautlAssetInfo;
+export default VaultAssetInfo;

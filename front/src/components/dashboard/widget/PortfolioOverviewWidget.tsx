@@ -1,8 +1,12 @@
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
-import AttendanceChart from "./MonthOverview";
+import { useMultiVaultPortfolioValue } from "@/utils/hook/vault";
 import WidgetLayout from "./WidgetLayout";
+import { Address } from "viem";
+import { displayFormattedBalance } from "@/utils/tokens/balance";
 
-const PortfolioOverviewWidget = () => {
+const PortfolioOverviewWidget = ({vaultAddresses}: {vaultAddresses: Address[]}) => {
+
+  const {totalBalance, isLoading} = useMultiVaultPortfolioValue({vaultAddresses});
+  
   // Example data - replace with real data
   const totalValue = "$542,470.00";
   const percentageChange = 22.23;
@@ -31,7 +35,7 @@ const PortfolioOverviewWidget = () => {
           <div className="mt-6">
             <div className="flex items-baseline gap-3">
               <span className="text-4xl font-bold text-gray-900">
-                {totalValue}
+                ${displayFormattedBalance(totalBalance)}
               </span>
             </div>
 

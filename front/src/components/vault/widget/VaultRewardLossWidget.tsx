@@ -1,6 +1,12 @@
+"use client";
+
 import GroupNavigation from "@/components/common/GroupNavigation";
 import WidgetLayout from "@/components/dashboard/widget/WidgetLayout";
-import React from "react";
+import { usePortfolioHistory } from "@/utils/hook/vault";
+import { displayFormattedBalance } from "@/utils/tokens/balance";
+
+import { LENDING_TOKENS, DEBT_TOKENS } from "@/utils/tokens/tokens";
+import React, { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -10,33 +16,82 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Address } from "viem";
 
-const generateData = () => {
-  return Array.from({ length: 20 }, (_, i) => {
-    const lending = Math.floor(Math.random() * 10000) + 2000;
-    const borrowing = -Math.floor(Math.random() * 5000) - 1000;
-    return {
-      period: `Week ${i + 1}`,
-      lending,
-      borrowing,
-      borrowingAbs: Math.abs(borrowing),
-    };
-  });
+
+interface DataPoint {
+  period: string;
+  lending: number;
+  borrowing: number;
+  borrowingAbs: number;
+}
+
+
+const calculateAverageInterest = (variations: number[], percentileThreshold = 0.8): number => {
+  // Sort variations by absolute value
+  const sortedAbs = [...variations].sort((a, b) => Math.abs(a) - Math.abs(b));
+  
+  // Remove top 20% (or whatever percentile) of values to eliminate likely deposits/withdrawals
+  const cutoffIndex = Math.floor(sortedAbs.length * percentileThreshold);
+  const filteredVariations = sortedAbs.slice(0, cutoffIndex);
+  
+  // Calculate average of remaining values
+  const average = filteredVariations.reduce((sum, val) => sum + val, 0) / filteredVariations.length;
+  
+  return average;
 };
 
-const data = generateData();
+export default function VaultRewardLossWidget({
+  vaultAddress,
+}: {
+  vaultAddress: Address;
+}) {
+  const { variation: lendingVariation, isLoading: isLoadingLendingVariation } = usePortfolioHistory({ 
+    vaultAddress, 
+    tokens: LENDING_TOKENS 
+  });
+  
+  const { variation: borrowingVariation, isLoading: isLoadingBorrowingVariation } = usePortfolioHistory({ 
+    vaultAddress, 
+    tokens: DEBT_TOKENS 
+  });
+  
+  const [maxLendingValue, setMaxLendingValue] = useState<string>("100");
+  const [maxBorrowingValue, setMaxBorrowingValue] = useState<string>("100");
+  
+  const [avgIncome, setAvgIncome] = useState<number>(0);
+  const [avgExpense, setAvgExpense] = useState<number>(0);
+  
+  const [data, setData] = useState<DataPoint[]>([]);
 
-export default function VaultRewardLossWidget() {
-  const totalIncome = data.reduce((sum, item) => sum + item.lending, 0);
-  const totalExpense = data.reduce((sum, item) => sum + item.borrowingAbs, 0);
-  const apyIncome = 4.8;
-  const apyExpense = 9.2;
+  // Memoize the transformed data and use it directly
+  useEffect(() => {
+    if(isLoadingLendingVariation || isLoadingBorrowingVariation) return;
+    
+    console.log("lendingVariation:", lendingVariation)
+    console.log("borrowingVariation:", borrowingVariation)
 
-  const maxLending = Math.max(...data.map((item) => item.lending));
-  const maxBorrowing = Math.max(...data.map((item) => item.borrowingAbs));
-  const maxValue = Math.max(maxLending, maxBorrowing);
+    const transformed = Array.from({ length: 19 }, (_, i) => ({ // FIXME: see if 20
+      period: `Day ${i + 1}`,
+      lending: lendingVariation[i] || 0,
+      borrowing: borrowingVariation[i] || 0,
+      borrowingAbs: Math.abs(borrowingVariation[i] || 0),
+    }));
 
-  const TIMEFRAMES = ["Daily", "Weekly"];
+    // Update max values when data changes
+    setMaxLendingValue(Math.max(...transformed.map(d => d.lending), 100).toFixed(2));
+    setMaxBorrowingValue(Math.max(...transformed.map(d => d.borrowingAbs), 100).toFixed(2));
+
+    setAvgIncome(calculateAverageInterest(transformed.map(d => d.lending)));
+    setAvgExpense(calculateAverageInterest(transformed.map(d => d.borrowingAbs)));
+    
+    setData(transformed);
+
+    console.log("transformed", transformed);
+
+  }, [isLoadingLendingVariation, isLoadingBorrowingVariation]);
+
+  const TIMEFRAMES = ["Daily"]; // , "Weekly"
   const [selectedTimeframe, setSelectedTimeframe] = React.useState("Daily");
 
   return (
@@ -46,7 +101,7 @@ export default function VaultRewardLossWidget() {
           <h2 className="text-2xl font-bold text-gray-900">
             Vault Performance
           </h2>
-          <p className="text-sm text-gray-500">Weekly yield analysis</p>
+          <p className="text-sm text-gray-500">Daily yield analysis</p>
         </div>
 
         <GroupNavigation
@@ -72,8 +127,8 @@ export default function VaultRewardLossWidget() {
                   stroke="#e5e7eb"
                 />
                 <YAxis
-                  domain={[0, maxValue]}
-                  ticks={[0, maxValue]} // Add this line
+                  domain={[0, maxLendingValue]}
+                  ticks={[0, maxLendingValue]} // Add this line
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => `$${value.toLocaleString()}`}
@@ -104,7 +159,7 @@ export default function VaultRewardLossWidget() {
                               </span>
                             </div>
                             <span className="text-sm font-semibold text-emerald-600">
-                              +${entry.value.toLocaleString()}
+                              +${displayFormattedBalance(entry.value || 0)}
                             </span>
                           </div>
                         ))}
@@ -131,8 +186,8 @@ export default function VaultRewardLossWidget() {
                   stroke="#e5e7eb"
                 />
                 <YAxis
-                  domain={[0, maxValue]}
-                  ticks={[0, maxValue]} // Add this line
+                  domain={[0, maxBorrowingValue]}
+                  ticks={[0, maxBorrowingValue]} // Add this line
                   reversed={true}
                   axisLine={false}
                   tickLine={false}
@@ -166,9 +221,9 @@ export default function VaultRewardLossWidget() {
                             </div>
                             <span className="text-sm font-semibold text-rose-600">
                               -$
-                              {Math.abs(
+                              {displayFormattedBalance(Math.abs(
                                 payload[0].payload.borrowing
-                              ).toLocaleString()}
+                              ))}
                             </span>
                           </div>
                         ))}
@@ -208,19 +263,19 @@ export default function VaultRewardLossWidget() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-600">
-                    Total Income
+                    Average Income
                   </h3>
                   <p className="text-2xl font-bold text-emerald-600">
-                    ${totalIncome.toLocaleString()}
+                    ${displayFormattedBalance(avgIncome)}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Current APY</span>
+              {/* <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Average Income</span>
                 <span className="font-medium text-emerald-600">
-                  {apyIncome}%
+                  ${avgIncome}
                 </span>
-              </div>
+              </div> */}
             </div>
 
             <div className="p-4 rounded-xl bg-rose-50/50 border border-rose-100">
@@ -242,17 +297,17 @@ export default function VaultRewardLossWidget() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-600">
-                    Total Expense
+                    Average Expense
                   </h3>
                   <p className="text-2xl font-bold text-rose-600">
-                    ${totalExpense.toLocaleString()}
+                    ${displayFormattedBalance(avgExpense)}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">Current APR</span>
-                <span className="font-medium text-rose-600">{apyExpense}%</span>
-              </div>
+              {/* <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Average Expense</span>
+                <span className="font-medium text-rose-600">${avgExpense}</span>
+              </div> */}
             </div>
           </div>
         </div>
