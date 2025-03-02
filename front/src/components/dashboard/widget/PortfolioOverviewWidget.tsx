@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { FaArrowUp } from "react-icons/fa";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -83,9 +84,9 @@ const PortfolioOverviewWidget = ({
           <h2 className="text-lg font-semibold text-gray-700">
             Total Portfolio Value
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          {/* <p className="text-sm text-gray-500 mt-1">
             {startDate} - {endDate}
-          </p>
+          </p> */}
 
           <div className="mt-6">
             <div className="flex items-baseline gap-3">
@@ -94,18 +95,18 @@ const PortfolioOverviewWidget = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2 mt-4">
+            {/* <div className="flex items-center gap-2 mt-4">
               <span className="text-green-500 bg-green-100 px-2 py-1 rounded-full flex items-center gap-1 text-sm font-medium">
-                {/* <ArrowUpIcon className="w-4 h-4" /> */}
+                <FaArrowUp className="w-4 h-4" />
                 {percentageChange}%
               </span>
               <span className="text-sm text-gray-500">Total return</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Chart */}
-        <div className="h-48 md:h-auto">
+        {/* <div className="h-48 md:h-auto">
           <div className="relative h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -161,7 +162,7 @@ const PortfolioOverviewWidget = ({
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </div> */}
       </div>
     </WidgetLayout>
   );

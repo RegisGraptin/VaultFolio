@@ -180,11 +180,15 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
             <span className="text-gray-500">Remaining supply</span>
             <span className="font-medium text-gray-700">
               {vaultBalance
-                ? formatBalance(
-                    vaultBalance.value -
-                      parseUnits(amount, vaultBalance.decimals),
-                    vaultBalance.decimals
-                  )
+                ? Number(amount) > 0 &&
+                  parseUnits(amount, vaultBalance.decimals) <=
+                    vaultBalance.value
+                  ? formatBalance(
+                      vaultBalance.value -
+                        parseUnits(amount, vaultBalance.decimals),
+                      vaultBalance.decimals
+                    )
+                  : "0.00"
                 : "0.00"}{" "}
               {token.symbol}
             </span>

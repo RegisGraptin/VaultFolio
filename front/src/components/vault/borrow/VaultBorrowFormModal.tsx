@@ -1,66 +1,64 @@
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Address, erc20Abi, formatUnits, getAddress, parseUnits } from "viem";
 
 import Vault from "@/abi/Vault.json";
-import {
-  useAccount,
-  useBalance,
-  useReadContract,
-  useWriteContract,
-} from "wagmi";
+import { useAccount, useBalance, useWriteContract } from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
-import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import { useReadOracle } from "@/utils/hook/oracle";
 import { convertAssetToUSD } from "@/utils/tokens/balance";
-import AAVEPool from "@/abi/Pool.json";
+
+const MAXIMAL_HEALTH_FACTOR = 1.5;
 
 interface ModalProps {
   onClose: () => void;
   vaultAddress: Address;
   assetAddress: Address;
+  totalLending: Number | undefined;
+  totalBorrowing: Number | undefined;
+  borrowApy: Number | undefined;
 }
 
 const VaultBorrowFormModal: React.FC<ModalProps> = ({
   onClose,
   vaultAddress,
   assetAddress,
+  totalLending,
+  totalBorrowing,
+  borrowApy,
 }) => {
-  const { address: userAddress } = useAccount();
-
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const { data: userBalance } = useBalance({
-    address: userAddress,
-    token: assetAddress,
+  const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
+    assetAddress,
   });
 
-  const { data, error } = useReadContract({
-    address: getAddress(process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL!),
-    abi: AAVEPool.abi,
-    functionName: "getReserveData",
-    args: [assetAddress],
-  });
+  const [healthFactor, setHealthFactor] = useState<number>(Infinity);
 
-  console.log("test data");
-  console.log("assetAddress: ", assetAddress, " data :", data);
-  console.log(error);
+  const availableToBorrowUSD = useMemo(() => {
+    if (!totalLending || !totalBorrowing) return 0;
 
-  const { data: addressPriceOracle } = useOracle("getPriceOracle");
+    // Calculate maximum borrow to maintain HF >= 1.5
+    const maxBorrowForHF = (Number(totalLending) * 2) / 3; // Divide by 1.5 using integer math
+    const safeBorrowCapacity = maxBorrowForHF - Number(totalBorrowing);
 
-  const { data: oraclePriceUSD } = usePriceOracle(
-    addressPriceOracle,
-    "getAssetPrice",
-    [getAddress(assetAddress)]
-  );
+    return safeBorrowCapacity > 0 ? safeBorrowCapacity : 0;
+  }, [totalLending, totalBorrowing]);
 
-  useEffect(() => {
-    console.log("data");
-    console.log(data);
-  }, [data]);
+  const availableToBorrow = useMemo(() => {
+    if (!oraclePriceUsd || availableToBorrowUSD === 0) return 0;
+
+    return (
+      Number(parseUnits(availableToBorrowUSD.toString(), 8)) /
+      Number(oraclePriceUsd)
+    );
+  }, [availableToBorrowUSD, oraclePriceUsd, token.decimals]);
+
+  console.log("availableToBorrow:", availableToBorrow);
 
   const validateAndFormatAmount = (): bigint | null => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -94,9 +92,6 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
     // FIXME: Need to indicate on the UI only variable rate are available
     const interestRateMode = 2; // FIXME: can be only 1 or 2
 
-    console.log("borrowing data");
-    console.log(data["variableDebtTokenAddress"]);
-
     writeBorrowToken({
       address: vaultAddress,
       abi: Vault.abi,
@@ -109,7 +104,7 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
     return amount == "" || Number(amount) == 0 || isProcessing || isBorrowing;
   };
 
-  let availableToBorrow = BigInt(100);
+  // let availableToBorrow = BigInt(100);
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -149,14 +144,10 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">Available</span>
               <span className="text-sm font-medium text-gray-700">
-                {availableToBorrow
-                  ? formatUnits(availableToBorrow, token.decimals)
-                  : "0.00"}
+                {availableToBorrow ? availableToBorrow.toFixed(4) : "0.00"}
               </span>
               <button
-                onClick={() =>
-                  setAmount(formatUnits(availableToBorrow, token.decimals))
-                }
+                onClick={() => setAmount(availableToBorrow.toString())}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 Max
@@ -188,11 +179,10 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
 
           <div className="mt-2 text-right text-sm text-gray-500">
             ≈ $
-            {convertAssetToUSD(
-              BigInt(Number(amount) * 10 ** token.decimals),
-              token.decimals,
-              oraclePriceUSD
-            )}
+            {oraclePriceUsd && amount
+              ? `${convertAssetToUSD(parseUnits(amount, token.decimals), token.decimals, oraclePriceUsd as bigint)}`
+              : "0.00"}{" "}
+            USD
           </div>
         </div>
 
@@ -201,16 +191,20 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Health Factor</span>
             <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-700">∞</span>
-              <span className="text-xs text-gray-400">
-                Liquidation at &lt;1.0
+              <span className="font-medium text-gray-700">
+                {healthFactor === Infinity ? "∞" : healthFactor.toFixed(2)}
               </span>
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Borrow APY</span>
-            <span className="font-medium text-gray-700">0%</span>
-          </div>
+
+          {borrowApy !== undefined && (
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500">Borrow APY</span>
+              <span className="font-medium text-gray-700">
+                {borrowApy?.toFixed(2)}%
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Attention Alert */}

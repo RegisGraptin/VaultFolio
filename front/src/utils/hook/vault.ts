@@ -53,78 +53,6 @@ export function useListVaults(userAddress: Address | string | undefined) {
   });
 }
 
-// FIXME: TB Remove ?
-export const usePortfolioValue = ({
-  vaultAddress,
-}: {
-  vaultAddress: Address;
-}) => {
-  const [totalBalance, setTotalBalance] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const { data: addressPriceOracle, isLoading: isLoadingOracleAddress } =
-    useOracle("getPriceOracle");
-
-  const tokenAddresses = Object.keys(LENDING_TOKENS);
-  const { data: tokenBalances } = useReadContracts({
-    query: {
-      enabled: !!vaultAddress,
-    },
-    contracts: tokenAddresses.map((tokenAddress) => ({
-      abi: erc20Abi,
-      address: getAddress(tokenAddress),
-      functionName: "balanceOf",
-      args: [vaultAddress],
-    })),
-  });
-
-  const { data: tokenPrices } = useReadContracts({
-    query: {
-      enabled: !!addressPriceOracle,
-    },
-    contracts: tokenAddresses.map((tokenAddress) => ({
-      address: addressPriceOracle
-        ? getAddress(addressPriceOracle as string)
-        : undefined,
-      abi: IPriceOracle.abi as Abi,
-      functionName: "getAssetPrice",
-      args: [getAddress(tokenAddress)],
-    })),
-  });
-
-  useEffect(() => {
-    if (!tokenBalances || !tokenPrices) return;
-
-    if (
-      tokenBalances.every((b) => b.status === "success") &&
-      tokenPrices.every((p) => p.status === "success")
-    ) {
-      let total = 0;
-
-      tokenAddresses.forEach((address, index) => {
-        const balance = tokenBalances[index].result;
-        const price = tokenPrices[index].result;
-        const decimals = LENDING_TOKENS[address].decimals;
-
-        if (balance && price) {
-          total += tokenToUSD(
-            {
-              value: balance as bigint,
-              decimals,
-            },
-            price as bigint
-          );
-        }
-      });
-
-      setTotalBalance(total);
-      setIsLoading(false);
-    }
-  }, [tokenBalances, tokenPrices]);
-
-  return { totalBalance, isLoading };
-};
-
 const usePortfolio = ({
   vaultAddress,
   tokens,
@@ -173,7 +101,7 @@ const usePortfolio = ({
   });
 
   useEffect(() => {
-    if (!tokenBalances || !tokenPrices) return;
+    if (!aaveTokenDetails || !tokenBalances || !tokenPrices) return;
 
     if (
       tokenBalances.every((b) => b.status === "success") &&
@@ -187,7 +115,7 @@ const usePortfolio = ({
         const price = tokenPrices[index].result;
         const decimals = tokens[address].decimals;
 
-        const aaveDetail = aaveTokenDetails![index].result as ReserveDataLegacy;
+        const aaveDetail = aaveTokenDetails[index].result as ReserveDataLegacy;
 
         let apy;
         if (mode == "lending") {
@@ -215,7 +143,7 @@ const usePortfolio = ({
       setTotalAPY(calculatedTotal > 0 ? apyNumerator / calculatedTotal : 0);
       setIsLoading(false);
     }
-  }, [tokenBalances, tokenPrices, tokenAddresses, tokens]);
+  }, [aaveTokenDetails, tokenBalances, tokenPrices, tokenAddresses, tokens]);
 
   return { total, totalAPY, isLoading };
 };
@@ -315,9 +243,9 @@ export const usePortfolioHistory = ({
   });
 
   const variation = Array(20).fill(0);
+  const balances = Array(20).fill(0);
 
   // Process all historical data
-  // const variation =
   useEffect(() => {
     if (!historicalQueries || !tokenPrices) return;
 
@@ -340,31 +268,35 @@ export const usePortfolioHistory = ({
       .map((q) => q.data)
       .sort((a, b) => Number(a.blockNumber - b.blockNumber));
 
-    // Calculate daily variations
-    for (let i = 1; i < validResults.length; i++) {
+    // Calculate daily variations and balances
+    for (let i = 0; i < validResults.length; i++) {
       const current = validResults[i];
-      const previous = validResults[i - 1];
 
       Object.values(tokens).forEach((token: Token, tokenIndex: number) => {
         const currentBalance = BigInt(current.balances[tokenIndex] || 0);
-        const previousBalance = BigInt(previous.balances[tokenIndex] || 0);
-
-        const balanceChange = currentBalance - previousBalance;
-
         const currentToken = Object.values(tokens)[tokenIndex];
         const decimals = currentToken.decimals;
-
         const price = tokenPrices[tokenIndex].result;
 
-        if (balanceChange > BigInt(0)) {
-          // Convert to USD using token price (implementation depends on your price source)
+        const tokenValue = tokenToUSD(
+          { value: currentBalance, decimals },
+          price as bigint
+        );
 
-          const tokenValue = tokenToUSD(
-            { value: BigInt(balanceChange), decimals },
-            price as bigint
-          );
+        balances[i] += tokenValue;
 
-          variation[i - 1] += tokenValue;
+        if (i > 0) {
+          const previous = validResults[i - 1];
+          const previousBalance = BigInt(previous.balances[tokenIndex] || 0);
+          const balanceChange = currentBalance - previousBalance;
+
+          if (balanceChange > BigInt(0)) {
+            const changeValue = tokenToUSD(
+              { value: balanceChange, decimals },
+              price as bigint
+            );
+            variation[i - 1] += changeValue;
+          }
         }
       });
     }
@@ -372,7 +304,7 @@ export const usePortfolioHistory = ({
     setIsLoading(false);
   }, [historicalQueries, tokenPrices]);
 
-  return { variation, isLoading };
+  return { variation, balances, isLoading };
 };
 
 export interface Allocation {
@@ -380,9 +312,6 @@ export interface Allocation {
   decimals: number;
   usdPrice: number;
   balances: number[];
-  // totalUSDValue: function () {
-  //   return this.balances.reduce((acc, balance) => acc + (balance / 10 ** this.decimals) * this.usdPrice, 0);
-  // },
 }
 
 export const allocationToUsd = (allocation: Allocation) => {

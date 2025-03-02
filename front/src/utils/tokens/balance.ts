@@ -8,12 +8,14 @@ export const formatBalance = (value?: bigint, decimals?: number) => {
   const [integerPart, decimalPart] = formattedValue.split(".");
 
   // Show only the last 4 decimals
-  const truncatedDecimalPart = decimalPart ? decimalPart.slice(-4) : "";
+  const truncatedDecimalPart = decimalPart ? decimalPart.slice(0, 4) : "";
   const truncatedValue = truncatedDecimalPart
     ? `${integerPart}.${truncatedDecimalPart}`
     : integerPart;
 
-  return truncatedValue;
+  return parseFloat(formattedValue) > 0 && parseFloat(formattedValue) < 0.0001
+    ? `~0.0001`
+    : truncatedValue;
 
   // FIXME: See how we can improve the formatting
   // return new Intl.NumberFormat("en-US", {

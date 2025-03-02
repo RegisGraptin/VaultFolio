@@ -18,7 +18,6 @@ import {
 } from "recharts";
 import { Address } from "viem";
 
-
 interface DataPoint {
   period: string;
   lending: number;
@@ -26,18 +25,22 @@ interface DataPoint {
   borrowingAbs: number;
 }
 
-
-const calculateAverageInterest = (variations: number[], percentileThreshold = 0.8): number => {
+const calculateAverageInterest = (
+  variations: number[],
+  percentileThreshold = 0.8
+): number => {
   // Sort variations by absolute value
   const sortedAbs = [...variations].sort((a, b) => Math.abs(a) - Math.abs(b));
-  
+
   // Remove top 20% (or whatever percentile) of values to eliminate likely deposits/withdrawals
   const cutoffIndex = Math.floor(sortedAbs.length * percentileThreshold);
   const filteredVariations = sortedAbs.slice(0, cutoffIndex);
-  
+
   // Calculate average of remaining values
-  const average = filteredVariations.reduce((sum, val) => sum + val, 0) / filteredVariations.length;
-  
+  const average =
+    filteredVariations.reduce((sum, val) => sum + val, 0) /
+    filteredVariations.length;
+
   return average;
 };
 
@@ -46,32 +49,37 @@ export default function VaultRewardLossWidget({
 }: {
   vaultAddress: Address;
 }) {
-  const { variation: lendingVariation, isLoading: isLoadingLendingVariation } = usePortfolioHistory({ 
-    vaultAddress, 
-    tokens: LENDING_TOKENS 
+  const { variation: lendingVariation, isLoading: isLoadingLendingVariation } =
+    usePortfolioHistory({
+      vaultAddress,
+      tokens: LENDING_TOKENS,
+    });
+
+  const {
+    variation: borrowingVariation,
+    isLoading: isLoadingBorrowingVariation,
+  } = usePortfolioHistory({
+    vaultAddress,
+    tokens: DEBT_TOKENS,
   });
-  
-  const { variation: borrowingVariation, isLoading: isLoadingBorrowingVariation } = usePortfolioHistory({ 
-    vaultAddress, 
-    tokens: DEBT_TOKENS 
-  });
-  
+
   const [maxLendingValue, setMaxLendingValue] = useState<string>("100");
   const [maxBorrowingValue, setMaxBorrowingValue] = useState<string>("100");
-  
+
   const [avgIncome, setAvgIncome] = useState<number>(0);
   const [avgExpense, setAvgExpense] = useState<number>(0);
-  
+
   const [data, setData] = useState<DataPoint[]>([]);
 
   // Memoize the transformed data and use it directly
   useEffect(() => {
-    if(isLoadingLendingVariation || isLoadingBorrowingVariation) return;
-    
-    console.log("lendingVariation:", lendingVariation)
-    console.log("borrowingVariation:", borrowingVariation)
+    if (isLoadingLendingVariation || isLoadingBorrowingVariation) return;
 
-    const transformed = Array.from({ length: 19 }, (_, i) => ({ // FIXME: see if 20
+    // console.log("lendingVariation:", lendingVariation)
+    // console.log("borrowingVariation:", borrowingVariation)
+
+    const transformed = Array.from({ length: 19 }, (_, i) => ({
+      // FIXME: see if 20
       period: `Day ${i + 1}`,
       lending: lendingVariation[i] || 0,
       borrowing: borrowingVariation[i] || 0,
@@ -79,16 +87,19 @@ export default function VaultRewardLossWidget({
     }));
 
     // Update max values when data changes
-    setMaxLendingValue(Math.max(...transformed.map(d => d.lending), 100).toFixed(2));
-    setMaxBorrowingValue(Math.max(...transformed.map(d => d.borrowingAbs), 100).toFixed(2));
+    setMaxLendingValue(
+      Math.max(...transformed.map((d) => d.lending), 100).toFixed(2)
+    );
+    setMaxBorrowingValue(
+      Math.max(...transformed.map((d) => d.borrowingAbs), 100).toFixed(2)
+    );
 
-    setAvgIncome(calculateAverageInterest(transformed.map(d => d.lending)));
-    setAvgExpense(calculateAverageInterest(transformed.map(d => d.borrowingAbs)));
-    
+    setAvgIncome(calculateAverageInterest(transformed.map((d) => d.lending)));
+    setAvgExpense(
+      calculateAverageInterest(transformed.map((d) => d.borrowingAbs))
+    );
+
     setData(transformed);
-
-    console.log("transformed", transformed);
-
   }, [isLoadingLendingVariation, isLoadingBorrowingVariation]);
 
   const TIMEFRAMES = ["Daily"]; // , "Weekly"
@@ -221,9 +232,9 @@ export default function VaultRewardLossWidget({
                             </div>
                             <span className="text-sm font-semibold text-rose-600">
                               -$
-                              {displayFormattedBalance(Math.abs(
-                                payload[0].payload.borrowing
-                              ))}
+                              {displayFormattedBalance(
+                                Math.abs(payload[0].payload.borrowing)
+                              )}
                             </span>
                           </div>
                         ))}

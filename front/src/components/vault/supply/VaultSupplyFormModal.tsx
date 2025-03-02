@@ -150,7 +150,7 @@ const VaultSupplyFormModal: React.FC<ModalProps> = ({
     if (allowance !== undefined) {
       return (
         Number(allowance) == 0 ||
-        Number(allowance) < Number(amount) * 10 ** token.decimals
+        Number(allowance) < parseUnits(amount.toString(), token.decimals)
       );
     }
     return false;

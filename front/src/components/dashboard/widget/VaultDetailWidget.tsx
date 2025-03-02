@@ -1,6 +1,10 @@
 import { Address } from "viem";
 import WidgetLayout from "./WidgetLayout";
-import { usePortfolioLending, usePortfolioValue, useVault } from "@/utils/hook/vault";
+import {
+  usePortfolioHistory,
+  usePortfolioLending,
+  useVault,
+} from "@/utils/hook/vault";
 import { getMenuColorStyle, getVaultColor } from "@/utils/vault/colors";
 import { displayFormattedBalance } from "@/utils/tokens/balance";
 import {
@@ -14,6 +18,8 @@ import {
 import { FaChevronRight, FaVault } from "react-icons/fa6";
 import { IoWallet } from "react-icons/io5";
 import Link from "next/link";
+import { LENDING_TOKENS } from "@/utils/tokens/tokens";
+import { useEffect, useMemo, useState } from "react";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -31,49 +37,41 @@ const VaultDetailWidget = ({
   vaultIndex?: number;
 }) => {
   // Read vault data
+  const [data, setData] = useState<{ date: string; balance: number }[]>([]);
   const { data: vaultName } = useVault(vaultAddress, "name");
   const { data: vaultColorIndex } = useVault(vaultAddress, "color");
 
   // FIXME: balance not on lending be careful here
-  const { totalLending, lendingAPY, isLoading } = usePortfolioLending({ vaultAddress });
+  const { totalLending, lendingAPY, isLoading } = usePortfolioLending({
+    vaultAddress,
+  });
 
-  const data = [
-    {
-      date: "2023-05-01",
-      balance: 25000.5,
-      apy: 5.2, // Optional for extended functionality
-    },
-    {
-      date: "2023-05-05",
-      balance: 26543.75,
-      apy: 5.5,
-    },
-    {
-      date: "2023-05-10",
-      balance: 27320.9,
-      apy: 5.8,
-    },
-    {
-      date: "2023-05-15",
-      balance: 28567.3,
-      apy: 6.1,
-    },
-    {
-      date: "2023-05-20",
-      balance: 27654.2, // Dip showing market fluctuation
-      apy: 5.9,
-    },
-    {
-      date: "2023-05-25",
-      balance: 29210.45,
-      apy: 6.3,
-    },
-    {
-      date: "2023-05-30",
-      balance: 30500.0,
-      apy: 6.5,
-    },
-  ];
+  // Daily
+  const { balances, isLoading: isLoadingPortfolioVariation } =
+    usePortfolioHistory({
+      vaultAddress,
+      tokens: LENDING_TOKENS,
+    });
+
+  // console.log("balances:", balances);
+
+  useEffect(() => {
+    if (isLoadingPortfolioVariation) return;
+
+    const currentDate = new Date();
+    const daysArray = Array.from({ length: 20 }, (_, i) => {
+      const date = new Date();
+      date.setDate(currentDate.getDate() - (19 - i));
+      return date;
+    });
+
+    setData(
+      balances.map((balance: number, index: number) => ({
+        date: daysArray[index].toISOString().split("T")[0],
+        balance: balance,
+      }))
+    );
+  }, [isLoadingPortfolioVariation]);
 
   const subTitle = vaultName ? `Vault #${vaultIndex}` : "Wallet";
   const title = vaultName ? (vaultName as string) : "My Wallet";
@@ -118,7 +116,9 @@ const VaultDetailWidget = ({
         {/* Display reward rate */}
         <div className="pt-5">
           <p className="text-sm text-gray-500 mt-1">Lending Yield</p>
-          <h2 className="text-xl font-semibold text-gray-700">{displayFormattedBalance(lendingAPY)}%</h2>
+          <h2 className="text-xl font-semibold text-gray-700">
+            {displayFormattedBalance(lendingAPY)}%
+          </h2>
         </div>
 
         {/* Display reward history */}

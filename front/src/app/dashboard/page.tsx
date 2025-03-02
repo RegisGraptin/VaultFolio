@@ -21,23 +21,20 @@ const Dashboard: NextPage = () => {
         Overview Dashboard
       </h1>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 items-stretch mb-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 items-stretch">
         <div className="w-full h-full xl:col-span-2">
-          <PortfolioOverviewWidget
-            vaultAddresses={vaultAddresses as Address[]}
-          />
-        </div>
-        <div className="w-full h-full xl:col-span-1">
-          <AllocationWidget vaultAddresses={vaultAddresses as Address[]} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 auto-rows-auto">
-        <div className="w-full xl:col-span-2">
+          <div className="mb-4">
+            <PortfolioOverviewWidget
+              vaultAddresses={vaultAddresses as Address[]}
+            />
+          </div>
           <TotalSupplyWidget />
         </div>
-        <div className="w-full xl:col-span-1">
-          <MonthlyRewardWidget />
+        <div className="w-full h-full xl:col-span-1">
+          <div className="mb-4">
+            <AllocationWidget vaultAddresses={vaultAddresses as Address[]} />
+          </div>
+          {/* <MonthlyRewardWidget /> */}
         </div>
       </div>
     </DashboardLayout>

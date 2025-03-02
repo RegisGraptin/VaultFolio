@@ -11,6 +11,7 @@ import VaultRepayFormModal from "./VaultRepayFormModal";
 import { convertAssetToUSD, formatBalance } from "@/utils/tokens/balance";
 import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
 import ActionButton from "@/components/button/ActionButton";
+import { usePortfolioBorrowing, usePortfolioLending } from "@/utils/hook/vault";
 
 const VaultBorrowRow = ({
   vaultAddress,
@@ -50,6 +51,14 @@ const VaultBorrowRow = ({
 
   // Get asset information from the AAVE pool
   const { data: reserveData } = useAave("getReserveData", [assetAddress]);
+
+  const { totalBorrowing } = usePortfolioBorrowing({
+    vaultAddress,
+  });
+
+  const { totalLending } = usePortfolioLending({
+    vaultAddress,
+  });
 
   useEffect(() => {
     if (reserveData) {
@@ -163,6 +172,9 @@ const VaultBorrowRow = ({
                   await refetchUserBalance();
                   await refetchVaultBalance();
                 },
+                totalLending: totalLending,
+                totalBorrowing: totalBorrowing,
+                borrowApy: apy,
               }}
             />
 
