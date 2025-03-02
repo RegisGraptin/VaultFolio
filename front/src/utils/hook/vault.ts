@@ -53,7 +53,6 @@ export function useListVaults(userAddress: Address | string | undefined) {
   });
 }
 
-
 // FIXME: TB Remove ?
 export const usePortfolioValue = ({
   vaultAddress,
@@ -253,12 +252,14 @@ export const usePortfolioHistory = ({
   tokens,
 }: {
   vaultAddress: Address;
-  tokens: Record<string, Token>
+  tokens: Record<string, Token>;
 }) => {
   const { data: currentBlock } = useBlockNumber();
-  const { data: tokenPrices } = useOracleOnMultipleTokens({ tokenAddresses: Object.keys(tokens) });
+  const { data: tokenPrices } = useOracleOnMultipleTokens({
+    tokenAddresses: Object.keys(tokens),
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  
+
   // Generate historical block numbers (newest first)
   const blockNumbers = useMemo(() => {
     if (!currentBlock) return [];
@@ -285,7 +286,12 @@ export const usePortfolioHistory = ({
   // Fetch historical data for each block
   const historicalQueries = useQueries({
     queries: blockNumbers.map((blockNumber) => ({
-      queryKey: ["portfolioHistory", vaultAddress, blockNumber.toString(), tokens],
+      queryKey: [
+        "portfolioHistory",
+        vaultAddress,
+        blockNumber.toString(),
+        tokens,
+      ],
       queryFn: async () => {
         // Use multicall for batch historical queries
         const results = await publicClient.multicall({
@@ -319,14 +325,15 @@ export const usePortfolioHistory = ({
     const allQueriesComplete = historicalQueries.every(
       (query) => !query.isLoading && !query.isError
     );
-    const allPricesComplete = tokenPrices.every((price) => price.status === "success");
+    const allPricesComplete = tokenPrices.every(
+      (price) => price.status === "success"
+    );
 
     if (!allQueriesComplete || !allPricesComplete) {
       setIsLoading(true);
       return;
     }
 
-    
     // Filter successful queries and sort by block number
     const validResults = historicalQueries
       .filter((q) => q.isSuccess)
@@ -348,7 +355,6 @@ export const usePortfolioHistory = ({
         const decimals = currentToken.decimals;
 
         const price = tokenPrices[tokenIndex].result;
-        
 
         if (balanceChange > BigInt(0)) {
           // Convert to USD using token price (implementation depends on your price source)
@@ -361,7 +367,6 @@ export const usePortfolioHistory = ({
           variation[i - 1] += tokenValue;
         }
       });
-
     }
 
     setIsLoading(false);
@@ -370,10 +375,29 @@ export const usePortfolioHistory = ({
   return { variation, isLoading };
 };
 
+export interface Allocation {
+  symbol: string;
+  decimals: number;
+  usdPrice: number;
+  balances: number[];
+  // totalUSDValue: function () {
+  //   return this.balances.reduce((acc, balance) => acc + (balance / 10 ** this.decimals) * this.usdPrice, 0);
+  // },
+}
 
-
-
-
+export const allocationToUsd = (allocation: Allocation) => {
+  const totalBalance = allocation.balances.reduce(
+    (acc, balance) => acc + balance,
+    0
+  );
+  return tokenToUSD(
+    {
+      value: BigInt(totalBalance),
+      decimals: allocation.decimals,
+    },
+    BigInt(allocation.usdPrice)
+  );
+};
 
 export const useMultiVaultPortfolioValue = ({
   vaultAddresses,
@@ -381,9 +405,14 @@ export const useMultiVaultPortfolioValue = ({
   vaultAddresses: Address[];
 }) => {
   const [totalBalance, setTotalBalance] = useState<number>(0);
+  const [allocations, setAllocations] = useState<Record<string, Allocation>>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const { data: tokenPrices } = useOracleOnMultipleTokens({ tokenAddresses: Object.keys(TOKEN_ASSETS) });
+  const { data: tokenPrices } = useOracleOnMultipleTokens({
+    tokenAddresses: Object.keys(TOKEN_ASSETS),
+  });
 
   // Get token list from TOKEN_ASSETS
   const tokens = LENDING_TOKENS;
@@ -411,7 +440,6 @@ export const useMultiVaultPortfolioValue = ({
     contracts: balanceContracts,
   });
 
-
   useEffect(() => {
     if (!allTokenBalances || !tokenPrices || !vaultAddresses?.length) {
       setIsLoading(true);
@@ -428,9 +456,12 @@ export const useMultiVaultPortfolioValue = ({
     }
 
     let total = 0;
+    const newAllocation: Record<string, Allocation> = {};
+
+    const mapping_token = Object.values(TOKEN_ASSETS);
 
     // Process balances for each vault
-    vaultAddresses.forEach((_, vaultIndex) => {
+    vaultAddresses.forEach((vaultAddress, vaultIndex) => {
       // For each vault, process all its tokens
       Object.values(tokens).forEach((token, tokenIndex) => {
         const balanceIndex = vaultIndex * tokenAddresses.length + tokenIndex;
@@ -446,13 +477,26 @@ export const useMultiVaultPortfolioValue = ({
             price as bigint
           );
           total += tokenValue;
+
+          // Update allocation
+          const tokenAddress = token.address;
+          if (!newAllocation[tokenAddress]) {
+            newAllocation[tokenAddress] = {
+              symbol: mapping_token[tokenIndex].symbol,
+              decimals: token.decimals,
+              usdPrice: Number(price),
+              balances: Array(vaultAddresses.length).fill(0),
+            };
+          }
+          newAllocation[tokenAddress].balances[vaultIndex] = Number(balance);
         }
       });
     });
 
     setTotalBalance(total);
+    setAllocations(newAllocation);
     setIsLoading(false);
   }, [allTokenBalances, tokenPrices, vaultAddresses, tokens]);
 
-  return { totalBalance, isLoading };
+  return { totalBalance, allocations, isLoading };
 };

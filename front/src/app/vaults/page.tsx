@@ -1,9 +1,8 @@
 "use client";
 
 import { NextPage } from "next";
-import { Address, getAddress } from "viem";
-import { useAccount, useReadContract } from "wagmi";
-import Manager from "@/abi/Manager.json";
+import { Address } from "viem";
+import { useAccount } from "wagmi";
 import { AAVEPositionProvider } from "@/components/aave/AAVEPositionProvider";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import VaultDetailWidget from "@/components/dashboard/widget/VaultDetailWidget";
@@ -26,12 +25,13 @@ const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 const VaultDashboardPage: NextPage = () => {
   const { address: userAddress } = useAccount();
   const { data: vaultAddresses } = useListVaults(userAddress);
-  
 
   return (
     <DashboardLayout>
       <section className="container mx-auto">
-        <TotalVaultOverviewWidget vaultAddresses={vaultAddresses as Address[]} />
+        <TotalVaultOverviewWidget
+          vaultAddresses={vaultAddresses as Address[]}
+        />
 
         {/* <h1 className="mb-4 text-5xl font-extrabold tracking-tight text-gray-900">
           List of vaults

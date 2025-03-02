@@ -1,3 +1,11 @@
+"use client";
+
+import Image from "next/image";
+
+import WidgetLayout from "@/components/dashboard/widget/WidgetLayout";
+import { displayFormattedBalance } from "@/utils/tokens/balance";
+import { Address } from "viem";
+import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -6,92 +14,182 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import WidgetLayout from "./WidgetLayout";
+import {
+  Allocation,
+  allocationToUsd,
+  useMultiVaultPortfolioValue,
+} from "@/utils/hook/vault";
 
-const AllocationWidget = () => {
-  // Sample data - replace with real data
-  const data = [
-    { name: "Stocks", value: 45, color: "#3B82F6" },
-    { name: "Bonds", value: 25, color: "#10B981" },
-    { name: "Cash", value: 15, color: "#6366F1" },
-    { name: "Real Estate", value: 10, color: "#F59E0B" },
-    { name: "Commodities", value: 5, color: "#EF4444" },
-  ];
+interface AssetAllocation {
+  symbol: string;
+  usdValue: number;
+  percentage: number;
+  balance: number;
+  decimals: number;
+  color: string;
+}
+
+// Define colors for each token
+const TOKEN_COLORS: Record<string, string> = {
+  DAI: "#F5AC37", // MakerDAO's gold/yellow
+  USDC: "#2775CA", // Circle's blue
+  USDT: "#26A17B", // Tether's green
+  WETH: "#627EEA", // Ethereum's blue (updated from original)
+  WBTC: "#F09242", // Wrapped Bitcoin's orange
+  AAVE: "#B6509E", // Aave's purple
+  LINK: "#2A5ADA", // Chainlink's blue
+  EURS: "#0F8FF8", // Stasis Euro's blue
+};
+
+export default function AllocationWidget({
+  vaultAddresses,
+}: {
+  vaultAddresses: Address[];
+}) {
+  const [assetAllocation, setAssetAllocation] = useState<AssetAllocation[]>([]);
+
+  const { totalBalance, allocations, isLoading } = useMultiVaultPortfolioValue({
+    vaultAddresses,
+  });
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    let proccessedAllocation: AssetAllocation[] = [];
+
+    Object.entries(allocations).forEach(
+      ([assetAddress, allocation]: [string, Allocation]) => {
+        const usdValue = allocationToUsd(allocation);
+        proccessedAllocation.push({
+          symbol: allocation.symbol,
+          color: TOKEN_COLORS[allocation.symbol] || "#CBD5E1", // fallback color
+          percentage: (usdValue / totalBalance) * 100,
+          usdValue: usdValue,
+          decimals: allocation.decimals,
+          balance: allocation.balances
+            .values()
+            .reduce((acc, val) => acc + val, 0),
+        });
+      }
+    );
+
+    setAssetAllocation(proccessedAllocation);
+  }, [isLoading]);
+
+  if (isLoading) {
+    return (
+      <WidgetLayout>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-10 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </WidgetLayout>
+    );
+  }
 
   return (
     <WidgetLayout>
-      <div className="flex justify-between items-start mb-6">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-700">
+          <h2 className="text-2xl font-bold text-gray-900">
             Portfolio Allocation
           </h2>
-          <p className="text-sm text-gray-500 mt-1">As of 12 January 2024</p>
         </div>
-        {/* <InformationCircleIcon className="w-5 h-5 text-gray-400 hover:text-gray-500 cursor-pointer" /> */}
-      </div>
 
-      <div className="h-64 md:h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              paddingAngle={2}
-              dataKey="value"
-              nameKey="name"
-            >
-              {data.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  stroke="#fff"
-                  strokeWidth={2}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                border: "none",
-              }}
-              formatter={(value, name) => [
-                `${value}%`,
-                <span key={name} className="text-gray-600">
-                  {name}
-                </span>,
-              ]}
-            />
-            <Legend
-              layout="horizontal"
-              verticalAlign="bottom"
-              align="center"
-              wrapperStyle={{ paddingTop: "20px" }}
-              content={({ payload }) => (
-                <div className="flex flex-wrap justify-center gap-4 mt-4">
-                  {payload?.map((entry, index) => (
-                    <div
-                      key={`legend-${index}`}
-                      className="flex items-center gap-2 text-sm"
-                    >
+        {/* Pie Chart */}
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={assetAllocation}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="percentage"
+                nameKey="symbol"
+              >
+                {assetAllocation.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number) => [`${value.toFixed(2)}%`]}
+                contentStyle={{
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  border: "none",
+                }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                content={({ payload }) => (
+                  <div className="flex flex-wrap justify-center gap-4">
+                    {payload?.map((entry: any) => (
                       <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-gray-600">{entry.value}</span>
-                    </div>
-                  ))}
+                        key={entry.value}
+                        className="flex items-center gap-2"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-sm text-gray-600">
+                          {entry.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* List View */}
+        <div className="space-y-3 mt-6">
+          {assetAllocation.map((allocation) => (
+            <div
+              key={allocation.symbol}
+              className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100"
+            >
+              <div className="flex items-center gap-3">
+                <Image
+                  src={`/images/tokens/${allocation.symbol.toLowerCase()}.svg`}
+                  alt={`${allocation.symbol} icon`}
+                  className="h-6 w-6"
+                  width={24}
+                  height={24}
+                />
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {allocation.symbol}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    ${displayFormattedBalance(allocation.usdValue)}
+                  </p>
                 </div>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+              </div>
+              <div className="text-right">
+                <p className="font-medium text-gray-900">
+                  {allocation.percentage.toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </WidgetLayout>
   );
-};
-
-export default AllocationWidget;
+}

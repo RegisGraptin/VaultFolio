@@ -2,11 +2,33 @@ import { useMultiVaultPortfolioValue } from "@/utils/hook/vault";
 import WidgetLayout from "./WidgetLayout";
 import { Address } from "viem";
 import { displayFormattedBalance } from "@/utils/tokens/balance";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-const PortfolioOverviewWidget = ({vaultAddresses}: {vaultAddresses: Address[]}) => {
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+};
 
-  const {totalBalance, isLoading} = useMultiVaultPortfolioValue({vaultAddresses});
-  
+const PortfolioOverviewWidget = ({
+  vaultAddresses,
+}: {
+  vaultAddresses: Address[];
+}) => {
+  const { totalBalance, isLoading } = useMultiVaultPortfolioValue({
+    vaultAddresses,
+  });
+
   // Example data - replace with real data
   const totalValue = "$542,470.00";
   const percentageChange = 22.23;
@@ -16,14 +38,47 @@ const PortfolioOverviewWidget = ({vaultAddresses}: {vaultAddresses: Address[]}) 
   // Example chart data points (normalized coordinates)
 
   const data = [
-    { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
-    { name: "Page B", uv: 500, pv: 2400, amt: 2400 },
+    {
+      date: "2023-05-01",
+      balance: 25000.5,
+      apy: 5.2, // Optional for extended functionality
+    },
+    {
+      date: "2023-05-05",
+      balance: 26543.75,
+      apy: 5.5,
+    },
+    {
+      date: "2023-05-10",
+      balance: 27320.9,
+      apy: 5.8,
+    },
+    {
+      date: "2023-05-15",
+      balance: 28567.3,
+      apy: 6.1,
+    },
+    {
+      date: "2023-05-20",
+      balance: 27654.2, // Dip showing market fluctuation
+      apy: 5.9,
+    },
+    {
+      date: "2023-05-25",
+      balance: 29210.45,
+      apy: 6.3,
+    },
+    {
+      date: "2023-05-30",
+      balance: 30500.0,
+      apy: 6.5,
+    },
   ];
 
   return (
     <WidgetLayout>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Side - Portfolio Value */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Portfolio Value */}
         <div>
           <h2 className="text-lg font-semibold text-gray-700">
             Total Portfolio Value
@@ -49,15 +104,62 @@ const PortfolioOverviewWidget = ({vaultAddresses}: {vaultAddresses: Address[]}) 
           </div>
         </div>
 
-        {/* Right Side - Chart */}
+        {/* Chart */}
         <div className="h-48 md:h-auto">
           <div className="relative h-full w-full">
-            {/* <LineChart width={400} height={400} data={data}>
-              <Line type="monotone" dataKey="uv" stroke="#8884d8" />
-              <CartesianGrid stroke="#ccc" />
-              <XAxis dataKey="name" />
-              <YAxis />
-            </LineChart> */}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={data}
+                margin={{ top: 5, right: 20, left: 10, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(0,0,0,0.1)"
+                  vertical={false}
+                />
+
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: "currentColor", fontSize: 12 }}
+                  tickLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                  axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
+                  tickFormatter={(value) => formatDate(value)}
+                />
+
+                <Tooltip
+                  labelClassName="bg-opacity-90 backdrop-blur-sm text-sm"
+                  contentStyle={{
+                    border: "none",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    color: "currentColor",
+                  }}
+                  itemStyle={{ padding: 0 }}
+                  formatter={(value) => [
+                    <span className="text-lg font-semibold">
+                      ${Number(value).toLocaleString()}
+                    </span>,
+                    "Balance",
+                  ]}
+                  labelFormatter={(label) => formatDate(label)}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="balance"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{
+                    r: 6,
+                    strokeWidth: 2,
+                    fill: "var(--card-background)",
+                    stroke: "currentColor",
+                  }}
+                  animationDuration={300}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
