@@ -3,7 +3,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Address, erc20Abi, formatUnits, getAddress, parseUnits } from "viem";
 
 import Vault from "@/abi/Vault.json";
-import { useAccount, useBalance, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
 import { useReadOracle } from "@/utils/hook/oracle";
@@ -31,13 +36,14 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
     assetAddress,
   });
 
-  const [healthFactor, setHealthFactor] = useState<number>(Infinity);
+  const [originalHealthFactor, setOriginalHealthFactor] =
+    useState<number>(Infinity);
+  const [newHealthFactor, setNewHealthFactor] = useState<number>(Infinity);
 
   const availableToBorrowUSD = useMemo(() => {
     if (!totalLending || !totalBorrowing) return 0;
@@ -45,6 +51,10 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
     // Calculate maximum borrow to maintain HF >= 1.5
     const maxBorrowForHF = (Number(totalLending) * 2) / 3; // Divide by 1.5 using integer math
     const safeBorrowCapacity = maxBorrowForHF - Number(totalBorrowing);
+
+    const hf = Number(totalLending) / Number(totalBorrowing);
+
+    setOriginalHealthFactor(totalBorrowing === Number(0) ? Infinity : hf);
 
     return safeBorrowCapacity > 0 ? safeBorrowCapacity : 0;
   }, [totalLending, totalBorrowing]);
@@ -58,7 +68,27 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
     );
   }, [availableToBorrowUSD, oraclePriceUsd, token.decimals]);
 
-  console.log("availableToBorrow:", availableToBorrow);
+  useEffect(() => {
+    if (!amount || !oraclePriceUsd || !totalLending || !totalBorrowing) {
+      setNewHealthFactor(originalHealthFactor);
+      return;
+    }
+
+    try {
+      const parsedAmount = parseUnits(amount, token.decimals);
+      let formattedAmount = parsedAmount * (oraclePriceUsd as bigint);
+      const formattedAmountSTR = formatUnits(
+        formattedAmount,
+        token.decimals + 8
+      );
+      const newDebtUSD = Number(totalBorrowing) + Number(formattedAmountSTR);
+
+      const hf = Number(totalLending) / Number(newDebtUSD);
+      setNewHealthFactor(newDebtUSD === Number(0) ? Infinity : hf);
+    } catch {
+      setNewHealthFactor(originalHealthFactor);
+    }
+  }, [amount, totalLending, totalBorrowing, oraclePriceUsd]);
 
   const validateAndFormatAmount = (): bigint | null => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -76,18 +106,26 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
 
   const {
     writeContract: writeBorrowToken,
+    data: txHashBorrow,
     isPending: isBorrowing,
     error: approveError,
     isSuccess: isApproved,
   } = useWriteContract();
 
+  const { isSuccess: isTxBorrowConfirmed, isLoading: isTxBorrowLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashBorrow,
+    });
+
+  useEffect(() => {
+    if (isTxBorrowConfirmed) {
+      onClose();
+    }
+  }, [isTxBorrowConfirmed]);
+
   const borrowToken = () => {
     let formattedAmount = validateAndFormatAmount();
     if (!formattedAmount) return;
-
-    // address asset,
-    // uint256 amount,
-    // uint256 interestRateMode
 
     // FIXME: Need to indicate on the UI only variable rate are available
     const interestRateMode = 2; // FIXME: can be only 1 or 2
@@ -101,10 +139,15 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
   };
 
   const isBorrowButtonDisabled = () => {
-    return amount == "" || Number(amount) == 0 || isProcessing || isBorrowing;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      Number(amount) < 0 ||
+      Number(amount) > availableToBorrow ||
+      isBorrowing ||
+      isTxBorrowLoading
+    );
   };
-
-  // let availableToBorrow = BigInt(100);
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -158,7 +201,7 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-gray-300 focus-within:border-blue-500 transition-colors">
             <input
               type="number"
-              step="any"
+              step={Math.pow(10, -token.decimals)}
               min="0"
               placeholder="0.00"
               value={amount}
@@ -191,8 +234,26 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Health Factor</span>
             <div className="flex items-center space-x-2">
-              <span className="font-medium text-gray-700">
-                {healthFactor === Infinity ? "∞" : healthFactor.toFixed(2)}
+              <span className="text-sm font-medium text-gray-700">
+                {originalHealthFactor === Infinity
+                  ? "∞"
+                  : originalHealthFactor.toFixed(2)}
+              </span>
+              <svg
+                className="h-4 w-4 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">
+                {newHealthFactor.toFixed(2)}
               </span>
             </div>
           </div>
@@ -245,7 +306,7 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
             className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
             disabled={isBorrowButtonDisabled()}
           >
-            {isProcessing ? "Processing..." : "Borrow"}
+            Borrow
           </LoadingButton>
         </div>
 

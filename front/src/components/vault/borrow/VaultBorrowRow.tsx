@@ -167,14 +167,14 @@ const VaultBorrowRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                totalLending: totalLending,
+                totalBorrowing: totalBorrowing,
+                borrowApy: apy,
                 onClose: async () => {
                   // Refresh the vault & user balance
                   await refetchUserBalance();
                   await refetchVaultBalance();
                 },
-                totalLending: totalLending,
-                totalBorrowing: totalBorrowing,
-                borrowApy: apy,
               }}
             />
 
@@ -184,6 +184,8 @@ const VaultBorrowRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                totalLending: totalLending,
+                totalBorrowing: totalBorrowing,
                 onClose: async () => {
                   // Refresh the vault & user balance
                   await refetchUserBalance();

@@ -1,33 +1,37 @@
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Address, erc20Abi, formatUnits, getAddress, parseUnits } from "viem";
 
 import Vault from "@/abi/Vault.json";
 import {
   useAccount,
   useBalance,
-  useReadContract,
+  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import { DEBT_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
-import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
+import { useReadOracle } from "@/utils/hook/oracle";
 import {
   convertAssetToUSD,
+  formatBalance,
   validateAndFormatAmount,
 } from "@/utils/tokens/balance";
-import AAVEPool from "@/abi/Pool.json";
 
 interface ModalProps {
   onClose: () => void;
   vaultAddress: Address;
   assetAddress: Address;
+  totalLending: Number | undefined;
+  totalBorrowing: Number | undefined;
 }
 
 const VaultRepayFormModal: React.FC<ModalProps> = ({
   onClose,
   vaultAddress,
   assetAddress,
+  totalLending,
+  totalBorrowing,
 }) => {
   const { address: userAddress } = useAccount();
 
@@ -36,30 +40,73 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
   const [amount, setAmount] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const { data: userBalance } = useBalance({
-    address: userAddress,
-    token: assetAddress,
+  const [newHealthFactor, setNewHealthFactor] = useState<number>(Infinity);
+  const [newDebtBalance, setNewDebtBalance] = useState<bigint>(BigInt(0));
+
+  const { data: ownedDebtBalance } = useBalance({
+    address: vaultAddress,
+    token: DEBT_TOKENS[assetAddress.toLocaleLowerCase()].address,
   });
 
-  const { data, error } = useReadContract({
-    address: getAddress(process.env.NEXT_PUBLIC_AAVE_POOL_SCROLL!),
-    abi: AAVEPool.abi,
-    functionName: "getReserveData",
-    args: [assetAddress],
+  const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
+    assetAddress,
   });
 
-  const { data: addressPriceOracle } = useOracle("getPriceOracle");
+  const originalHealthFactor = useMemo(() => {
+    const hf = Number(totalLending) / Number(totalBorrowing);
+    return totalBorrowing === Number(0) ? Infinity : hf;
+  }, [totalLending, totalBorrowing]);
 
-  const { data: oraclePriceUSD } = usePriceOracle(
-    addressPriceOracle,
-    "getAssetPrice",
-    [getAddress(assetAddress)]
-  );
+  useEffect(() => {
+    if (
+      !amount ||
+      !oraclePriceUsd ||
+      !totalLending ||
+      !totalBorrowing ||
+      !ownedDebtBalance
+    ) {
+      setNewHealthFactor(originalHealthFactor);
+      return;
+    }
 
-  let availableToBorrow = BigInt(100);
+    try {
+      const parsedAmount = parseUnits(amount, token.decimals);
 
-  const { writeContract: writeRepayToken, isPending: isRepaying } =
-    useWriteContract();
+      setNewDebtBalance(ownedDebtBalance.value - parsedAmount);
+
+      let formattedAmount = parsedAmount * (oraclePriceUsd as bigint);
+      const formattedAmountSTR = formatUnits(
+        formattedAmount,
+        token.decimals + 8
+      );
+      const newDebtUSD = Math.max(
+        Number(totalBorrowing) - Number(formattedAmountSTR),
+        0
+      );
+
+      const hf = Number(totalLending) / Number(newDebtUSD);
+      setNewHealthFactor(newDebtUSD === Number(0) ? Infinity : hf);
+    } catch {
+      setNewHealthFactor(originalHealthFactor);
+    }
+  }, [amount, totalLending, totalBorrowing, oraclePriceUsd, ownedDebtBalance]);
+
+  const {
+    writeContract: writeRepayToken,
+    data: txHashRepay,
+    isPending: isRepaying,
+  } = useWriteContract();
+
+  const { isSuccess: isTxRepayConfirmed, isLoading: isTxRepayLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashRepay,
+    });
+
+  useEffect(() => {
+    if (isTxRepayConfirmed) {
+      onClose();
+    }
+  }, [isTxRepayConfirmed]);
 
   const repayToken = () => {
     // FIXME: to checked
@@ -75,8 +122,16 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
   };
 
   const isRepayButtonDisabled = () => {
-    // FIXME:
-    return false;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      Number(amount) < 0 ||
+      (ownedDebtBalance &&
+        parseUnits(amount.toString(), ownedDebtBalance?.decimals) >
+          ownedDebtBalance?.value) ||
+      isRepaying ||
+      isTxRepayLoading
+    );
   };
 
   return (
@@ -117,13 +172,23 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">Available</span>
               <span className="text-sm font-medium text-gray-700">
-                {availableToBorrow
-                  ? formatUnits(availableToBorrow, token.decimals)
+                {ownedDebtBalance
+                  ? formatUnits(
+                      ownedDebtBalance.value,
+                      ownedDebtBalance.decimals
+                    )
                   : "0.00"}
               </span>
               <button
                 onClick={() =>
-                  setAmount(formatUnits(availableToBorrow, token.decimals))
+                  setAmount(
+                    ownedDebtBalance
+                      ? formatUnits(
+                          ownedDebtBalance.value,
+                          ownedDebtBalance.decimals
+                        )
+                      : "0.00"
+                  )
                 }
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
@@ -156,11 +221,10 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
 
           <div className="mt-2 text-right text-sm text-gray-500">
             ≈ $
-            {convertAssetToUSD(
-              BigInt(Number(amount) * 10 ** token.decimals),
-              token.decimals,
-              oraclePriceUSD
-            )}
+            {oraclePriceUsd && amount
+              ? `${convertAssetToUSD(parseUnits(amount, token.decimals), token.decimals, oraclePriceUsd as bigint)}`
+              : "0.00"}{" "}
+            USD
           </div>
         </div>
 
@@ -173,7 +237,12 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
               <span className="text-sm text-gray-500">Remaining debt</span>
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700">
-                  1.0000000 EURS
+                  {formatBalance(
+                    ownedDebtBalance!.value,
+                    ownedDebtBalance!.decimals
+                  ) +
+                    " " +
+                    token.symbol}
                 </span>
                 <svg
                   className="h-4 w-4 text-blue-500"
@@ -189,17 +258,21 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
                   />
                 </svg>
                 <span className="text-sm font-medium text-gray-700">
-                  0 EURS
+                  {newDebtBalance < 0
+                    ? "0"
+                    : formatBalance(newDebtBalance, ownedDebtBalance!.decimals)}
+
+                  {" " + token.symbol}
                 </span>
               </div>
             </div>
 
             {/* Health Factor */}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Health factor</span>
+              <span className="text-gray-500">Health Factor</span>
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700">
-                  173.17
+                  {originalHealthFactor.toFixed(2)}
                 </span>
                 <svg
                   className="h-4 w-4 text-blue-500"
@@ -214,7 +287,11 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
                     d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
                   />
                 </svg>
-                <span className="text-sm font-medium text-gray-700">∞</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {newHealthFactor === Infinity
+                    ? "∞"
+                    : newHealthFactor.toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
