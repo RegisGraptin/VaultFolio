@@ -4,7 +4,6 @@ import { NextPage } from "next";
 import { useParams } from "next/navigation";
 import { getAddress, isAddress } from "viem";
 
-import { useVault } from "@/utils/hook/vault";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import VaultNavigation, {
   VAULT_VIEW_TABS,
@@ -18,8 +17,6 @@ const VaultPage: NextPage = () => {
   const isValidAddress = isAddress(vaultAddress as string);
 
   const [activeTab, setActiveTab] = useState(VAULT_VIEW_TABS[0]);
-
-  const { data: vaultName } = useVault(vaultAddress as string, "name");
 
   if (!isValidAddress) {
     return (

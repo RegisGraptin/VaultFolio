@@ -4,6 +4,7 @@ import VaultDetailLendingView from "./VaultDetailLendingView";
 import VaultDetailBorrowingView from "./VaultDetailBorrowingView";
 import { Address } from "viem";
 import { VAULT_VIEW_TABS } from "../widget/VaultNavigation";
+import VaultAutomationView from "./VaultAutomationView";
 
 type ContentProps = {
   activeTab: string;
@@ -31,6 +32,9 @@ const VaultDetailManageView = ({ activeTab, vaultAddress }: ContentProps) => {
           </div>
           <div className="w-full flex-shrink-0 p-4">
             <VaultDetailBorrowingView vaultAddress={vaultAddress} />
+          </div>
+          <div className="w-full flex-shrink-0 p-4">
+            <VaultAutomationView vaultAddress={vaultAddress} />
           </div>
         </div>
       </div>

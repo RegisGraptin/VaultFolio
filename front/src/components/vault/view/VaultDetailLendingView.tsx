@@ -12,7 +12,7 @@ const VaultDetailLendingView = ({
 
   return (
     <div className="m-2 p-6 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-extrabold py-5">Your supplies</h2>
+      <h2 className="text-2xl font-semibold pb-5">Your supplies</h2>
       <div>
         <table className="w-full table-auto min-w-max">
           <thead className="text-center">

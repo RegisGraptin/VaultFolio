@@ -5,7 +5,12 @@ type NavigationProps = {
   setActiveTab: (tab: string) => void;
 };
 
-export const VAULT_VIEW_TABS = ["Dashboard", "Lending", "Borrowing"];
+export const VAULT_VIEW_TABS = [
+  "Dashboard",
+  "Lending",
+  "Borrowing",
+  "Automation",
+];
 
 const VaultNavigation = ({ activeTab, setActiveTab }: NavigationProps) => {
   const buttonRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
