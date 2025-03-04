@@ -7,3 +7,6 @@
 [submodule "contracts/lib/aave-v3-origin"]
 	path = contracts/lib/aave-v3-origin
 	url = https://github.com/aave-dao/aave-v3-origin
+[submodule "contracts/lib/chainlink"]
+	path = contracts/lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink
