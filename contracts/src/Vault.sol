@@ -4,46 +4,38 @@ pragma solidity ^0.8.28;
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import {IPool} from 'aave-v3-core/contracts/protocol/pool/Pool.sol';
 
-// Understand proxy pattern
-// Add different strategy based on the user needs
-
-
-
+import {IVault} from "./interfaces/IVault.sol";
 
 // contract SwapReward is IStrategy {
 //     // Once I earn more than 5% 
 //     // Swap the reward to another assets
 
-
-
-
-
-contract Vault is Ownable {
+contract Vault is IVault, Ownable {
     /// Logic of the smart contract
     /// It should store all the representation value of AAVE, meaning the aToken 
     /// from a lending position or the debt token from a borrowing position.
     /// 
     /// All the liqudity should remained to the user.
 
+    // Notice the wraped token stays in the vault
 
-    address immutable public AAVE_POOL_ADDRESS;
 
-    uint16 immutable public REFERRAL_CODE = 0; // FIXME: visibility ?
-
-    uint8 public color;
-    string public name;
+    address public immutable AAVE_POOL_ADDRESS;
+    address public immutable manager;
+    uint8 public immutable color;
+    string public immutable name;
     
 
-    // FIXME: Naming nomenclature
     constructor(
         address _aave_pool,
-        address owner,
+        address _manager,
+        address owner_,
         uint8 _color,
         string memory _name
-    ) Ownable(owner) {
+    ) Ownable(owner_) {
         AAVE_POOL_ADDRESS = _aave_pool;
+        manager = _manager;
         color = _color;
         name = _name;
     }
@@ -54,9 +46,6 @@ contract Vault is Ownable {
 
 
     // mapping(strategyId => bool) activated;
-
-    bytes[] strategyParams; 
-    address[] strategies;
 
     // IStrategy[] strategies; // address // Monitor start / end
                             // Have a full history of the actions --> bring trust in the process
@@ -75,9 +64,9 @@ contract Vault is Ownable {
 
         IERC20(asset).approve(AAVE_POOL_ADDRESS, amount);
 
-        IPool(AAVE_POOL_ADDRESS).supply(asset, amount, address(this), REFERRAL_CODE);
+        IPool(AAVE_POOL_ADDRESS).supply(asset, amount, address(this), Manager(manager).getAaveReferralCode());
 
-        // Notice the wraped token stays in the vault
+        
     }
     
         
@@ -93,7 +82,7 @@ contract Vault is Ownable {
         uint256 interestRateMode
     ) external {
         // interestRateMode: 1 for Stable, 2 for Variable
-        IPool(AAVE_POOL_ADDRESS).borrow(asset, amount, interestRateMode, REFERRAL_CODE, address(this));
+        IPool(AAVE_POOL_ADDRESS).borrow(asset, amount, interestRateMode, Manager(manager).getAaveReferralCode(), address(this));
 
         // Send the token to the users
         // Isolate the debt in the smart contract
@@ -122,41 +111,53 @@ contract Vault is Ownable {
         return IPool(AAVE_POOL_ADDRESS).getReservesList();
     }
 
-    function registerStrategy(address strategy, bytes memory params) external {
-        // FIXME:
+
+
+    
+    uint256 public numberOfActivatedStrategies;
+
+    address[] public strategies;
+    bytes[] public strategyParams; 
+
+
+    function hasStrategies() external view returns(bool) {
+        return numberOfActivatedStrategies > 0;
     }
 
-
-    function executeStrategy(uint256 id) external {
-        // require(IStrategy(strategies[id]).isExecutable(), 'STRATEGY_CANNOT_BE_RUN');
-        // IStrategy(strategies[id]).execute();
-
-
-        strategies[id].delegatecall(
-            abi.encodeWithSignature('execute(bytes)', strategyParams[id])
-        );
-
-    }
-
-
-
-
-    // Can have multiple one! 
-    uint256 public nextExecutionTime;
-
-
-    function addStrategy(address strategyAddress) external onlyOwner {
+    function addStrategy(address strategyAddress, bytes memory params) external onlyOwner {
         strategies.push(strategyAddress);
-        // approvedStrategies[strategyAddress] = true;
-        if (nextExecutionTime == 0) {
-            nextExecutionTime = block.timestamp + 1 weeks;
-        }
+        strategyParams.push(params);
+        numberOfActivatedStrategies++;
+
+        // FIXME: event please!
+    }
+
+    function removeStrategy(uint256 strategyId) external onlyOwner {
+        // FIXME: custom error please
+        require(strategyId < numberOfActivatedStrategies, "Invalid strategy ID");
+
+        strategies[strategyId] = strategies[strategies.length - 1];
+        strategyParams[strategyId] = strategyParams[strategyParams.length - 1];
+
+        strategies.pop();
+        strategyParams.pop();
+        numberOfActivatedStrategies--;
+
+        // FIXME: event
+        // Emit an event for strategy removal
+        // emit StrategyRemoved(strategyId);
     }
 
     function executeStrategies() external onlyManager {
         for (uint256 i = 0; i < strategies.length; i++) {
-            if (approvedStrategies[strategies[i]]) {
-                IStrategy(strategies[i]).execute(address(this));
+            
+            // FIXME:
+            // Do we need to approve a strategy?
+            // Shoudl we remove a strategy or disable it?
+            // What would make sense for the user?
+
+            if (IStrategy(strategies[i]).isExecutable(strategyParams[i])) {
+                IStrategy(strategies[i]).execute(strategyParams[i]);
             }
         }
     }

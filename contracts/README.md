@@ -15,6 +15,12 @@ https://book.getfoundry.sh/
 
 ## Usage
 
+### Lint
+
+```shell
+$ solhint 'src/**/*.sol'
+```
+
 ### Build
 
 ```shell

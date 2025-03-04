@@ -5,11 +5,15 @@ import {IPool} from 'aave-v3-core/contracts/protocol/pool/Pool.sol';
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
-import {IStrategy} from "./IStrategy.sol";
+import {IStrategy} from "../interfaces/IStrategy.sol";
 
 // Use 95% of reward to repay
 
 contract RepayStrategy is IStrategy {
+
+    // Repay do we need a swap? 
+    //  https://aave.com/docs/developers/smart-contracts/switch-adapters
+
 
     function isExecutable(bytes memory data) external override view returns(bool) {
         return true;
