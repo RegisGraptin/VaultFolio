@@ -17,6 +17,7 @@ import {
   formatBalance,
   validateAndFormatAmount,
 } from "@/utils/tokens/balance";
+import { useAllowance } from "@/utils/hook/token";
 
 interface ModalProps {
   onClose: () => void;
@@ -47,6 +48,69 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
     address: vaultAddress,
     token: DEBT_TOKENS[assetAddress.toLocaleLowerCase()].address,
   });
+
+  // Fetch user allowance
+  const {
+    data: allowance,
+    isLoading: isLoadingAllowance,
+    refetch: refetchAllowance,
+  } = useAllowance(assetAddress, [userAddress!, vaultAddress]);
+
+  const {
+    writeContract: writeApproveToken,
+    data: txHashApprove,
+    isPending: isApproving,
+  } = useWriteContract();
+
+  const { isSuccess: isTxApproveConfirmed, isLoading: isTxApproveLoading } =
+    useWaitForTransactionReceipt({
+      hash: txHashApprove,
+    });
+
+  // Refetch approval data after approval update
+  useEffect(() => {
+    if (isTxApproveConfirmed) {
+      refetchAllowance();
+    }
+  }, [isTxApproveConfirmed]);
+
+  const approveToken = () => {
+    let formattedAmount = validateAndFormatAmount(amount, token.decimals);
+    if (!formattedAmount) return;
+
+    writeApproveToken({
+      address: assetAddress,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [vaultAddress, formattedAmount],
+    });
+  };
+
+  const isNeedsApproval = () => {
+    if (allowance !== undefined) {
+      return (
+        Number(allowance) == 0 ||
+        Number(allowance) < parseUnits(amount.toString(), token.decimals)
+      );
+    }
+    return false;
+  };
+
+  const isApproveButtonDisabled = () => {
+    // Should be disabled if we do not have an input value
+    // If the input value is greater than the approval value
+    // If we are loading the value of the allowance
+    // console.log;
+    return (
+      amount == "" ||
+      Number(amount) == 0 ||
+      Number(amount) < 0 ||
+      !isNeedsApproval() ||
+      isApproving ||
+      isTxApproveLoading ||
+      isLoadingAllowance
+    );
+  };
 
   const { oraclePriceUsd, isLoading: isOracleLoading } = useReadOracle({
     assetAddress,
@@ -130,7 +194,9 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
         parseUnits(amount.toString(), ownedDebtBalance?.decimals) >
           ownedDebtBalance?.value) ||
       isRepaying ||
-      isTxRepayLoading
+      isTxRepayLoading ||
+      isLoadingAllowance ||
+      isNeedsApproval()
     );
   };
 
@@ -329,6 +395,17 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
 
         {/* Action Buttons */}
         <div className="space-y-3">
+          {isNeedsApproval() && (
+            <LoadingButton
+              isLoading={isApproving || isTxApproveLoading}
+              onClick={() => approveToken()}
+              className={`w-full py-3 rounded-xl text-white font-medium transition-colors`}
+              disabled={isApproveButtonDisabled()}
+            >
+              Approve
+            </LoadingButton>
+          )}
+
           <LoadingButton
             isLoading={isRepaying}
             onClick={() => repayToken()}
