@@ -58,6 +58,12 @@ contract RepayStrategy is IStrategy {
 
 
 contract Vault is Ownable {
+    /// Logic of the smart contract
+    /// It should store all the representation value of AAVE, meaning the aToken 
+    /// from a lending position or the debt token from a borrowing position.
+    /// 
+    /// All the liqudity should remained to the user.
+
 
     address immutable public AAVE_POOL_ADDRESS;
 
@@ -66,6 +72,8 @@ contract Vault is Ownable {
     uint8 public color;
     string public name;
     
+
+    // FIXME: Naming nomenclature
     constructor(
         address _aave_pool,
         address owner,
@@ -126,9 +134,9 @@ contract Vault is Ownable {
 
         // Send the token to the users
         // Isolate the debt in the smart contract
-        // IERC20(asset).transfer(msg.sender, amount);
+        IERC20(asset).transfer(msg.sender, amount);
 
-        // FIXME: Does the smart contact should keep the token?
+        // FIXME: Send an event!
     }
     
 
@@ -137,6 +145,11 @@ contract Vault is Ownable {
         uint256 amount,
         uint256 interestRateMode
     ) external returns (uint256) {
+                
+        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+
+        IERC20(asset).approve(AAVE_POOL_ADDRESS, amount);
+
         return IPool(AAVE_POOL_ADDRESS).repay(asset, amount, interestRateMode, address(this));
     }
 
@@ -161,26 +174,5 @@ contract Vault is Ownable {
         );
 
     }
-
-
-    // TODO:: Strategies ?
-
-    // Q: How does yield works ? 
-
-    // On AAVE - supply 1:1 token:aToken
-    // Distribution => Increase user balance
-
-    // Keeper - 10 days
-    // - Automate reward to repay yield
-    // - Automate reward to buy other kind of assets
-
-
-    // How to reduce entry barrier
-    // => Do not want to pay fees for each market action
-
-    // FIXME: Front-end side --> Show all the history for all the action of the vault!
-    
-
-    // Different strategies
 
 }

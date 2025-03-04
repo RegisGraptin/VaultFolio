@@ -28,4 +28,7 @@ contract Manager {
         return vaults[user];
     }
 
+    // FIXME: Check how can I saved the vault value
+    // Need to avoid any malicious attack that can call it
+
 }
