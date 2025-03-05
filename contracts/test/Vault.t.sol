@@ -6,13 +6,17 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import {Test, console} from 'forge-std/Test.sol';
 import {Vault} from '../src/Vault.sol';
+import {Manager} from '../src/Manager.sol';
 
 contract VaultTest is Test {
+
+    address ownerManager = makeAddr("owner");
     
+    Manager public manager;
     Vault public vault;
 
     // Mainnet Aave V3 Pool Address
-    address immutable public AAVE_POOL_ADDRESS = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
+    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
     
     // Test user
     address public user = makeAddr('user');
@@ -25,7 +29,9 @@ contract VaultTest is Test {
     function setUp() public {
         vm.createSelectFork('https://rpc.ankr.com/eth');
 
-        vault = new Vault(AAVE_POOL_ADDRESS, user, 1, 'Test');
+
+        manager = new Manager(ownerManager, POOL_ADDRESSES_PROVIDER_ADDRESS);
+        vault = new Vault(POOL_ADDRESSES_PROVIDER_ADDRESS, address(manager), user, 1, 'Test');
     }
 
     function test_Supply() public {
@@ -85,7 +91,11 @@ contract VaultTest is Test {
 
         // Step 6: Check the user’s USDC balance
         usdcBalance = usdc.balanceOf(address(vault));
-        assertEq(usdcBalance, borrowAmount, 'USDC balance should be equals to the supply and borrow amount');
+        assertEq(usdcBalance, 0, 'USDC balance of the vault should empty.');
+
+        // Step 7: Check the user’s USDC balance
+        uint256 userUsdcBalance = usdc.balanceOf(user);
+        assertEq(userUsdcBalance, borrowAmount, 'USDC balance should be equals to the borrow amount');
         vm.stopPrank();
     }
 

@@ -1,166 +1,205 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+import {IPool} from "aave-v3-core/contracts/protocol/pool/Pool.sol";
+import {IPoolAddressesProvider} from "aave-v3-core/contracts/protocol/configuration/PoolAddressesProvider.sol";
+
+import {IManager} from "./interfaces/IManager.sol";
 import {IVault} from "./interfaces/IVault.sol";
+import {IStrategy} from "./interfaces/IStrategy.sol";
+import {IStrategyExecutor} from "./interfaces/IStrategyExecutor.sol";
 
-// contract SwapReward is IStrategy {
-//     // Once I earn more than 5% 
-//     // Swap the reward to another assets
+import {SubscribeStrategyStruct} from "./interfaces/IStrategy.sol";
 
-contract Vault is IVault, Ownable {
+contract Vault is IVault, Ownable, ReentrancyGuard {
     /// Logic of the smart contract
-    /// It should store all the representation value of AAVE, meaning the aToken 
+    /// It should store all the representation value of AAVE, meaning the aToken
     /// from a lending position or the debt token from a borrowing position.
-    /// 
+    ///
     /// All the liqudity should remained to the user.
 
     // Notice the wraped token stays in the vault
 
-
-    address public immutable AAVE_POOL_ADDRESS;
-    address public immutable manager;
-    uint8 public immutable color;
-    string public immutable name;
+    address public immutable POOL_ADDRESSES_PROVIDER_ADDRESS;
     
+    address public immutable manager;
+    uint8 public color;
+    string public name;
+
+    uint256 public numberOfActivatedStrategies;
+
+    SubscribeStrategyStruct[] public subscribedStrategies;
 
     constructor(
-        address _aave_pool,
+        address _aaveProviderAddress,
         address _manager,
         address owner_,
         uint8 _color,
         string memory _name
     ) Ownable(owner_) {
-        AAVE_POOL_ADDRESS = _aave_pool;
+        POOL_ADDRESSES_PROVIDER_ADDRESS = _aaveProviderAddress;
         manager = _manager;
         color = _color;
         name = _name;
     }
 
-
-    // FIXME: Need to think how to manage startegy id --> 1? 
-    //        What should we do when we remove one? 
-
-
-    // mapping(strategyId => bool) activated;
-
-    // IStrategy[] strategies; // address // Monitor start / end
-                            // Have a full history of the actions --> bring trust in the process
-
-    // FIXME:: Will need to check weird tokens!
-    function supply(
-        address asset,
-        uint256 amount
-    ) external {
-
-        // TODO: Fees optimization ? 
-        // 1. Create the account
-        // 2. Call directly the AAVE contract and pass the vault address for the 'onBehalfOf'
-        
-        IERC20(asset).transferFrom(msg.sender, address(this), amount);
-
-        IERC20(asset).approve(AAVE_POOL_ADDRESS, amount);
-
-        IPool(AAVE_POOL_ADDRESS).supply(asset, amount, address(this), Manager(manager).getAaveReferralCode());
-
-        
+    modifier onlyManager() {
+        require(msg.sender == manager, "Only manager can call this function");
+        _;
     }
-    
-        
+
+    function _aavePoolAddress() internal view returns (address) {
+        return IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER_ADDRESS).getPool();
+    }
+
+    function supply(address asset, uint256 amount) external {
+        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+        IERC20(asset).approve(_aavePoolAddress(), amount);
+        IPool(_aavePoolAddress()).supply(
+            asset,
+            amount,
+            address(this),
+            IManager(manager).aaveReferralCode()
+        );
+        emit Supply(asset, amount);
+    }
+
     function withdraw(address asset, uint256 amount) external {
         // Withdraw the vault position and send back the token to the users
-        IPool(AAVE_POOL_ADDRESS).withdraw(asset, amount, msg.sender);
+        IPool(_aavePoolAddress()).withdraw(asset, amount, msg.sender);
+        emit Withdraw(asset, amount);
     }
 
-    
     function borrow(
-        address asset, 
-        uint256 amount, 
+        address asset,
+        uint256 amount,
         uint256 interestRateMode
     ) external {
         // interestRateMode: 1 for Stable, 2 for Variable
-        IPool(AAVE_POOL_ADDRESS).borrow(asset, amount, interestRateMode, Manager(manager).getAaveReferralCode(), address(this));
+        IPool(_aavePoolAddress()).borrow(
+            asset,
+            amount,
+            interestRateMode,
+            IManager(manager).aaveReferralCode(),
+            address(this)
+        );
 
         // Send the token to the users
         // Isolate the debt in the smart contract
         IERC20(asset).transfer(msg.sender, amount);
 
-        // FIXME: Send an event!
+        emit Borrow(asset, amount, interestRateMode);
     }
-    
 
+    // * @return The actual amount being repaid
+    // Possibility to defined type(uint256).max
+    // In order to avoid remainign dust in the SC
     function repay(
         address asset,
         uint256 amount,
         uint256 interestRateMode
     ) external returns (uint256) {
-                
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
 
-        IERC20(asset).approve(AAVE_POOL_ADDRESS, amount);
+        IERC20(asset).approve(_aavePoolAddress(), amount);
 
-        return IPool(AAVE_POOL_ADDRESS).repay(asset, amount, interestRateMode, address(this));
+        uint256 amountRepaid = IPool(_aavePoolAddress()).repay(
+            asset,
+            amount,
+            interestRateMode,
+            address(this)
+        );
+        emit Repay(asset, amount, interestRateMode);
+        return amountRepaid;
     }
 
+    //////////////////////////////////////////////////////////////////
+    /// Manage Strategies Functions
+    //////////////////////////////////////////////////////////////////
 
-
-    function getReservesList() public view returns (address[] memory data) {
-        return IPool(AAVE_POOL_ADDRESS).getReservesList();
-    }
-
-
-
-    
-    uint256 public numberOfActivatedStrategies;
-
-    address[] public strategies;
-    bytes[] public strategyParams; 
-
-
-    function hasStrategies() external view returns(bool) {
+    function hasStrategies() external view override returns (bool) {
         return numberOfActivatedStrategies > 0;
     }
 
-    function addStrategy(address strategyAddress, bytes memory params) external onlyOwner {
-        strategies.push(strategyAddress);
-        strategyParams.push(params);
+    function needExecution() external view override returns (bool) {
+        for (uint256 i = 0; i < subscribedStrategies.length; i++) {
+            IStrategy strategy = IStrategy(subscribedStrategies[i].strategyAddress); 
+
+            bool executable = strategy.isExecutable(
+                subscribedStrategies[i].subscriptionId
+            );
+            if (executable) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+
+    function addStrategy(
+        address strategyAddress,
+        bytes memory params
+    ) external override onlyOwner returns (uint256) {
+
+        // FIXME: Check if manager is whitelisted and have access to the strategy
+
+
+        // Get a new subscription id and add the strategy to the vault's list
+        uint256 subscribeStrategyId = IStrategy(strategyAddress).subscribe(params);
+
+        subscribedStrategies.push(
+            SubscribeStrategyStruct(
+                strategyAddress, 
+                subscribeStrategyId
+            )
+        );
+
         numberOfActivatedStrategies++;
 
-        // FIXME: event please!
+        // FIXME: TBM
+        emit StrategyAdded(
+            numberOfActivatedStrategies - 1,
+            strategyAddress,
+            params
+        );
+        return numberOfActivatedStrategies - 1;
     }
 
-    function removeStrategy(uint256 strategyId) external onlyOwner {
-        // FIXME: custom error please
-        require(strategyId < numberOfActivatedStrategies, "Invalid strategy ID");
+    // FIXME: remove params and delegate the management to the strategy
+    // Plus add a strategyId to know which params used in the strategy.
 
-        strategies[strategyId] = strategies[strategies.length - 1];
-        strategyParams[strategyId] = strategyParams[strategyParams.length - 1];
+    function removeStrategy(uint256 strategyId) external override onlyOwner {
+        if (strategyId >= numberOfActivatedStrategies) {
+            revert InvalidStrategyId(strategyId);
+        }
+        address strategyAddress = subscribedStrategies[strategyId].strategyAddress;
 
-        strategies.pop();
-        strategyParams.pop();
+        subscribedStrategies[strategyId] = subscribedStrategies[subscribedStrategies.length - 1];
+
+        
+        subscribedStrategies.pop();
         numberOfActivatedStrategies--;
 
-        // FIXME: event
-        // Emit an event for strategy removal
-        // emit StrategyRemoved(strategyId);
+        emit StrategyRemoved(strategyId, strategyAddress);
     }
 
-    function executeStrategies() external onlyManager {
-        for (uint256 i = 0; i < strategies.length; i++) {
-            
-            // FIXME:
-            // Do we need to approve a strategy?
-            // Shoudl we remove a strategy or disable it?
-            // What would make sense for the user?
+    function executeStrategies() external override onlyManager nonReentrant {
+        for (uint256 i = 0; i < subscribedStrategies.length; i++) {
+            IStrategy strategy = IStrategy(subscribedStrategies[i].strategyAddress); 
 
-            if (IStrategy(strategies[i]).isExecutable(strategyParams[i])) {
-                IStrategy(strategies[i]).execute(strategyParams[i]);
+            bool executable = strategy.isExecutable(
+                subscribedStrategies[i].subscriptionId
+            );
+            if (executable) {
+                strategy.execute(subscribedStrategies[i].subscriptionId);
+                emit StrategyExecuted(i, subscribedStrategies[i].strategyAddress, subscribedStrategies[i].subscriptionId);
             }
         }
     }
-
-
 }

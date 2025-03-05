@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Vault} from "./Vault.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AutomationCompatibleInterface} from "chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
-contract Manager is Ownable, AutomationCompatibleInterface {
+import {IManager} from "./interfaces/IManager.sol";
+import {IVault} from "./interfaces/IVault.sol";
+import {Vault} from "./Vault.sol";
+
+contract Manager is IManager, Ownable, AutomationCompatibleInterface {
 
 
     // For automate action, we can have the possibility to add forwarer address 
@@ -17,39 +21,35 @@ contract Manager is Ownable, AutomationCompatibleInterface {
     
 
     // AAVE Referral code - TBD as not available at the moment
-    uint16 public AAVE_REFERRAL_CODE = 0;
+    uint16 public aaveReferralCode = 0;
 
 
     address[] public allVaults;  // FIXME: 
     mapping (address user => address[] vaults) public vaults; 
 
-    event VaultCreated(address vault, address user);
-
-    address immutable public AAVE_POOL_ADDRESS;
+    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS;
 
     constructor(
         address owner_,
-        address _aave_pool
+        address _aavePoolAddressProvider
     ) Ownable(owner_) {
-        AAVE_POOL_ADDRESS = _aave_pool;
+        POOL_ADDRESSES_PROVIDER_ADDRESS = _aavePoolAddressProvider;
     }
     
     function createVault(
         uint8 color, 
         string memory name
     ) public {
-        Vault vault = new Vault(AAVE_POOL_ADDRESS, address(this), msg.sender, color, name);
+        Vault vault = new Vault(POOL_ADDRESSES_PROVIDER_ADDRESS, address(this), msg.sender, color, name);
         vaults[msg.sender].push(address(vault));
         allVaults.push(address(vault));
         emit VaultCreated(address(vault), msg.sender);
     }
 
-    function getAaveReferralCode() public view returns (uint16) {
-        return AAVE_REFERRAL_CODE;
-    }
+    
 
-    function setAaveReferralCode(uint16 code) public onlyOwner {
-        AAVE_REFERRAL_CODE = code;
+    function setAaveReferralCode(uint16 _aaveReferralCode) public onlyOwner {
+        aaveReferralCode = _aaveReferralCode;
     }
 
 
@@ -61,15 +61,18 @@ contract Manager is Ownable, AutomationCompatibleInterface {
     // FIXME: Check how can I saved the vault value
     // Need to avoid any malicious attack that can call it
 
+    //////////////////////////////////////////////////////////////////
+    /// Strategies automation
+    //////////////////////////////////////////////////////////////////
 
-     // Chainlink Automation: Check if any Vault needs execution
+    /// Check if any vault need to execute strategies
     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory performData) {
         address[] memory dueVaults = new address[](allVaults.length);
         uint256 count = 0;
 
         for (uint256 i = 0; i < allVaults.length; i++) {
-            Vault vault = Vault(allVaults[i]);
-            if (vault.hasStrategies() && vault.nextExecutionTime() <= block.timestamp) {
+            IVault vault = IVault(allVaults[i]);
+            if (vault.hasStrategies() && vault.needExecution()) {
                 dueVaults[count] = allVaults[i];
                 count++;
             }
@@ -84,14 +87,13 @@ contract Manager is Ownable, AutomationCompatibleInterface {
         }
     }
 
-    // Chainlink Automation: Execute eligible Vaults' strategies
+    // Execute eligible Vaults' strategies
     function performUpkeep(bytes calldata performData) external override {
         address[] memory dueVaults = abi.decode(performData, (address[]));
         for (uint256 i = 0; i < dueVaults.length; i++) {
-            Vault vault = Vault(dueVaults[i]);
-            if (vault.nextExecutionTime() <= block.timestamp) {
+            IVault vault = IVault(dueVaults[i]);
+            if (vault.needExecution()) {
                 vault.executeStrategies();
-                vault.updateExecutionTime();
             }
         }
     }
