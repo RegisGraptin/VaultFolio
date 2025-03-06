@@ -4,7 +4,6 @@ import { NextPage } from "next";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import PortfolioOverviewWidget from "@/components/dashboard/widget/PortfolioOverviewWidget";
-import MonthlyRewardWidget from "@/components/dashboard/widget/MonthlyRewardWidget";
 import AllocationWidget from "@/components/dashboard/widget/AllocationWidget";
 import TotalSupplyWidget from "@/components/dashboard/widget/TotalSupplyWidget";
 import { useAccount } from "wagmi";

@@ -38,25 +38,30 @@ const Faq = () => {
 
   const toggleFAQ = (index: number) => {
     setOpenIndexes((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
 
   return (
-    <section className="max-w-3xl mx-auto py-32 px-4 p-4">
-      <h2 className="text-3xl font-manrope font-bold text-center mb-8">
-        Frequently Asked Questions
-      </h2>
+    <section className="max-w-7xl mx-auto py-24 px-6">
+      <div className="text-center mb-20">
+        <span className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text font-semibold text-sm uppercase tracking-widest mb-4">
+          Support
+        </span>
+        <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+          Frequently Asked Questions
+        </h2>
+      </div>
 
       <div className="space-y-4">
         {faqs.map((item, index) => (
           <div
             key={index}
-            className="border rounded-lg overflow-hidden transition-all duration-300"
+            className="border rounded-lg overflow-hidden transition-all duration-300 shadow-lg transition-all hover:shadow-xl"
           >
             <button
               onClick={() => toggleFAQ(index)}
-              className="flex justify-between items-center w-full p-4 text-left bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="flex justify-between items-center w-full p-4 text-left bg-gray-50 hover:bg-gray-100 transition-colors px-8 py-6"
             >
               <span className="font-medium">{item.question}</span>
               <span
@@ -99,7 +104,11 @@ const Faq = () => {
             >
               twitter
             </Link>{" "}
-            or by <Link className="underline" href={"mailto:hello@vaultfolio.xyz"}>email</Link>.
+            or by{" "}
+            <Link className="underline" href={"mailto:hello@vaultfolio.xyz"}>
+              email
+            </Link>
+            .
           </p>
         </div>
       </div>
