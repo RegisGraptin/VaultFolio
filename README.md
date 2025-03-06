@@ -36,6 +36,8 @@ https://docs.chain.link/chainlink-automation/guides/flexible-upkeeps
 
 
 
+https://docs.chain.link/chainlink-automation/reference/automation-interfaces/#automationcompatibleinterface
+
 ## Links
 
 https://aave.com/docs

@@ -76,11 +76,18 @@ const pros: Item[] = [
 export default function ProblemSolution() {
   return (
     <>
-      <section className="py-16 bg-gradient-to-b from-zinc-50 to-white">
+      <section className="py-24 px-6 bg-gradient-to-b from-zinc-50 to-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Tired of managing all your DeFi positions?
-          </h2>
+          {/* Section Header */}
+          <div className="text-center mb-20 space-y-6">
+            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+              Tired of managing all your DeFi positions?
+            </h2>
+            <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
+              Discover how our platform transforms your daily operations through
+              intuitive features and smart automation.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Problem Column */}

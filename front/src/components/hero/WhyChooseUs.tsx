@@ -38,10 +38,10 @@ export default function WhyChooseUs() {
         {/* Section Header */}
         <div className="text-center mb-20 space-y-6">
           <span className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text font-semibold text-sm uppercase tracking-widest">
-            Why Platform Name
+            Why VaultFolio
           </span>
           <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            DeFi Management
+            DeFi Management{" "}
             <span className="relative whitespace-nowrap">
               <span className="absolute -bottom-2 left-0 h-3 w-full bg-indigo-100/80 z-0" />
               <span className="relative">Reinvented</span>

@@ -18,6 +18,11 @@ struct SendStrategyParams {
     uint256 executionAfter;
 }
 
+// FIXME: Swap strategy
+// https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
+
+
+
 // FIXME: precise the owner should be the manager
 // FIXME double check subscriptionId
 contract SendStrategy is IStrategy, Ownable {

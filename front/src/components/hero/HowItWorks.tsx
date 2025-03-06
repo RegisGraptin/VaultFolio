@@ -31,13 +31,20 @@ export default function HowItWorks() {
 
   return (
     <section className="bg-white py-24 px-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="mb-20 text-center">
+        <div className="text-center mb-20 space-y-6">
+          <span className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text font-semibold text-sm uppercase tracking-widest">
+            Why VaultFolio
+          </span>
           <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Streamline Your Workflow
+            Manage your{" "}
+            <span className="relative whitespace-nowrap">
+              <span className="absolute -bottom-2 left-0 h-3 w-full bg-indigo-100/80 z-0" />
+              <span className="relative">Strategies</span>
+            </span>
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-lg text-gray-600">
+          <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
             Discover how our platform transforms your daily operations through
             intuitive features and smart automation.
           </p>
