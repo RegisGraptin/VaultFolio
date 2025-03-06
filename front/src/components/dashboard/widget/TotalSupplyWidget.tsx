@@ -3,7 +3,12 @@
 import { FaChevronDown, FaChevronRight } from "react-icons/fa6";
 import VaultAssetInfo from "@/components/vault/common/VaultAssetInfo";
 import WidgetLayout from "./WidgetLayout";
-import { Balance, LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
+import {
+  Balance,
+  LENDING_TOKENS,
+  Token,
+  TOKEN_ASSETS,
+} from "@/utils/tokens/tokens";
 import { useAccount, useBalance } from "wagmi";
 import { useListVaults, useVault } from "@/utils/hook/vault";
 import { Address, getAddress } from "viem";

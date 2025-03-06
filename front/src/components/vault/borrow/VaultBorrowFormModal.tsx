@@ -46,7 +46,7 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
   const [newHealthFactor, setNewHealthFactor] = useState<number>(Infinity);
 
   const availableToBorrowUSD = useMemo(() => {
-    if (!totalLending || !totalBorrowing) return 0;
+    if (totalLending === undefined || totalBorrowing === undefined) return 0;
 
     // Calculate maximum borrow to maintain HF >= 1.5
     const maxBorrowForHF = (Number(totalLending) * 2) / 3; // Divide by 1.5 using integer math
@@ -66,10 +66,15 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
       Number(parseUnits(availableToBorrowUSD.toString(), 8)) /
       Number(oraclePriceUsd)
     );
-  }, [availableToBorrowUSD, oraclePriceUsd, token.decimals]);
+  }, [availableToBorrowUSD, oraclePriceUsd]);
 
   useEffect(() => {
-    if (!amount || !oraclePriceUsd || !totalLending || !totalBorrowing) {
+    if (
+      !amount ||
+      !oraclePriceUsd ||
+      totalLending === undefined ||
+      totalBorrowing === undefined
+    ) {
       setNewHealthFactor(originalHealthFactor);
       return;
     }
@@ -239,22 +244,28 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
                   ? "∞"
                   : originalHealthFactor.toFixed(2)}
               </span>
-              <svg
-                className="h-4 w-4 text-blue-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-                />
-              </svg>
-              <span className="text-sm font-medium text-gray-700">
-                {newHealthFactor.toFixed(2)}
-              </span>
+              {newHealthFactor != originalHealthFactor && (
+                <>
+                  <svg
+                    className="h-4 w-4 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700">
+                    {newHealthFactor === Infinity
+                      ? "∞"
+                      : newHealthFactor.toFixed(2)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

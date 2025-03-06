@@ -59,10 +59,12 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
                 {auto.type === "Weekly Loan Repayment" ? (
                   <p>Repaying {auto.params.percentage}% of rewards weekly</p>
                 ) : (
-                  <p>
-                    Splitting rewards to {auto.params.split[0]}% BTC /{" "}
-                    {auto.params.split[1]}% ETH
-                  </p>
+                  auto.params.split && (
+                    <p>
+                      Splitting rewards to {auto.params.split[0]}% BTC /{" "}
+                      {auto.params.split[1]}% ETH
+                    </p>
+                  )
                 )}
               </div>
 

@@ -222,7 +222,7 @@ export const usePortfolioHistory = ({
       ],
       queryFn: async () => {
         // Use multicall for batch historical queries
-        const results = await publicClient.multicall({
+        const results = await publicClient!.multicall({
           blockNumber: blockNumber,
           contracts: baseContracts.map((c) => ({
             ...c,
@@ -232,7 +232,7 @@ export const usePortfolioHistory = ({
         return {
           blockNumber,
           balances: results.map((r) => r.result ?? BigInt(0)),
-          timestamp: await publicClient
+          timestamp: await publicClient!
             .getBlock({ blockNumber })
             .then((b) => b.timestamp),
         };

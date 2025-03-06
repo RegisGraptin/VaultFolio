@@ -39,7 +39,6 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
 
   const [amount, setAmount] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const [newHealthFactor, setNewHealthFactor] = useState<number>(Infinity);
   const [newDebtBalance, setNewDebtBalance] = useState<bigint>(BigInt(0));

@@ -170,7 +170,10 @@ export default function VaultRewardLossWidget({
                               </span>
                             </div>
                             <span className="text-sm font-semibold text-emerald-600">
-                              +${displayFormattedBalance(entry.value || 0)}
+                              +$
+                              {displayFormattedBalance(
+                                (entry.value as number) || 0
+                              )}
                             </span>
                           </div>
                         ))}

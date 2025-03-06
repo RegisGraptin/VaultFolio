@@ -84,10 +84,13 @@ export default function ProblemSolution() {
 
           <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Problem Column */}
-            <div className="space-y-8 bg-rose-100/75 text-rose-700 p-8 rounded-lg mx-2">
-              <h3 className="text-center font-bold text-lg mb-4">
-                Your DeFi Positions Now
-              </h3>
+            <div className="space-y-8 text-rose-700 p-8 rounded-lg mx-2">
+              <div className="mb-8 text-center">
+                <h3 className="inline-block text-lg font-semibold bg-red-50 text-red-700 px-6 py-2 rounded-full">
+                  Your DeFi Positions Now
+                </h3>
+              </div>
+
               {cons.map((con, index) => {
                 return (
                   <div
@@ -109,15 +112,19 @@ export default function ProblemSolution() {
             </div>
 
             {/* Solution Column */}
-            <div className="space-y-8 bg-emerald-100/70 text-emerald-700 p-8 rounded-lg mx-2">
-              <h3 className="text-center font-bold text-lg mb-4">
-                Your Defi positions with VaultFolio
-              </h3>
+            <div className="space-y-8 text-blue-700 p-8 rounded-lg mx-2">
+              <div className="mb-8 text-center">
+                <h3 className="inline-block text-lg font-semibold bg-blue-50 text-blue-700 px-6 py-2 rounded-full">
+                  VaultFolio Solutions
+                  {/* Your Defi positions with VaultFolio */}
+                </h3>
+              </div>
+
               {pros.map((pro, index) => {
                 return (
                   <div
                     key={index}
-                    className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-green-500 transform transition hover:-translate-y-1"
+                    className="p-6 bg-white rounded-xl shadow-lg border-l-4 border-blue-500 transform transition hover:-translate-y-1"
                   >
                     <div className="flex items-start gap-4">
                       <span className="text-3xl">{pro.emoji}</span>

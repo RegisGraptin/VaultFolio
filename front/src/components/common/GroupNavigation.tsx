@@ -27,7 +27,7 @@ const GroupNavigation = ({
         left: activeButton.offsetLeft,
       });
     }
-  }, [activeTab]);
+  }, [tabs, activeTab]);
 
   return (
     <>

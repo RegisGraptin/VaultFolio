@@ -151,8 +151,8 @@ const VaultDetailWidget = ({
                   color: "currentColor",
                 }}
                 itemStyle={{ padding: 0 }}
-                formatter={(value) => [
-                  <span className="text-lg font-semibold">
+                formatter={(value, index) => [
+                  <span key={index} className="text-lg font-semibold">
                     ${Number(value).toLocaleString()}
                   </span>,
                   "Balance",
