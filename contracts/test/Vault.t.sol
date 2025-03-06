@@ -99,4 +99,36 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
+
+    function test_Repay() public {
+        uint256 supplyAmount = 1000 * 1e6; // USDC has 6 decimals
+        deal(address(usdc), user, supplyAmount);
+
+        // Step 2: Approve Aave Pool to spend USDC
+        vm.startPrank(user);
+        usdc.approve(address(vault), supplyAmount);
+
+        // Step 3: Supply USDC to Aave
+        vault.supply(address(usdc), supplyAmount);
+
+        // Step 4: Borrow USDC from Aave using the vault
+        uint256 borrowAmount = 1 * 1e6; // USDC has 6 decimals
+        vault.borrow(address(usdc), borrowAmount, 2);
+
+        // Check the user’s USDC balance
+        uint256 usdcBalance = usdc.balanceOf(user);
+        assertEq(usdcBalance, borrowAmount, 'USDC balance of the user should match the borrow value.');
+
+        // Step 5: Repay USDC to Aave using the vault
+        uint256 repayAmount = 1 * 1e6; // USDC has 6 decimals
+        usdc.approve(address(vault), repayAmount);
+        vault.repay(address(usdc), repayAmount, 2);
+
+        // Step 7: Check the user’s USDC balance
+        usdcBalance = usdc.balanceOf(user);
+        assertEq(usdcBalance, 0, 'The user should have no more USDC after repayment');
+        vm.stopPrank();
+
+    }
+
 }

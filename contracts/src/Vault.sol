@@ -26,7 +26,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
     // Notice the wraped token stays in the vault
 
     address public immutable POOL_ADDRESSES_PROVIDER_ADDRESS;
-    
+
     address public immutable manager;
     uint8 public color;
     string public name;
@@ -128,7 +128,9 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
 
     function needExecution() external view override returns (bool) {
         for (uint256 i = 0; i < subscribedStrategies.length; i++) {
-            IStrategy strategy = IStrategy(subscribedStrategies[i].strategyAddress); 
+            IStrategy strategy = IStrategy(
+                subscribedStrategies[i].strategyAddress
+            );
 
             bool executable = strategy.isExecutable(
                 subscribedStrategies[i].subscriptionId
@@ -140,24 +142,19 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         return false;
     }
 
-    
-
     function addStrategy(
         address strategyAddress,
         bytes memory params
     ) external override onlyOwner returns (uint256) {
-
         // FIXME: Check if manager is whitelisted and have access to the strategy
 
-
         // Get a new subscription id and add the strategy to the vault's list
-        uint256 subscribeStrategyId = IStrategy(strategyAddress).subscribe(params);
+        uint256 subscribeStrategyId = IStrategy(strategyAddress).subscribe(
+            params
+        );
 
         subscribedStrategies.push(
-            SubscribeStrategyStruct(
-                strategyAddress, 
-                subscribeStrategyId
-            )
+            SubscribeStrategyStruct(strategyAddress, subscribeStrategyId)
         );
 
         numberOfActivatedStrategies++;
@@ -178,11 +175,13 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         if (strategyId >= numberOfActivatedStrategies) {
             revert InvalidStrategyId(strategyId);
         }
-        address strategyAddress = subscribedStrategies[strategyId].strategyAddress;
+        address strategyAddress = subscribedStrategies[strategyId]
+            .strategyAddress;
 
-        subscribedStrategies[strategyId] = subscribedStrategies[subscribedStrategies.length - 1];
+        subscribedStrategies[strategyId] = subscribedStrategies[
+            subscribedStrategies.length - 1
+        ];
 
-        
         subscribedStrategies.pop();
         numberOfActivatedStrategies--;
 
@@ -191,14 +190,20 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
 
     function executeStrategies() external override onlyManager nonReentrant {
         for (uint256 i = 0; i < subscribedStrategies.length; i++) {
-            IStrategy strategy = IStrategy(subscribedStrategies[i].strategyAddress); 
+            IStrategy strategy = IStrategy(
+                subscribedStrategies[i].strategyAddress
+            );
 
             bool executable = strategy.isExecutable(
                 subscribedStrategies[i].subscriptionId
             );
             if (executable) {
                 strategy.execute(subscribedStrategies[i].subscriptionId);
-                emit StrategyExecuted(i, subscribedStrategies[i].strategyAddress, subscribedStrategies[i].subscriptionId);
+                emit StrategyExecuted(
+                    i,
+                    subscribedStrategies[i].strategyAddress,
+                    subscribedStrategies[i].subscriptionId
+                );
             }
         }
     }
