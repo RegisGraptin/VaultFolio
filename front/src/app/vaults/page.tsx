@@ -14,7 +14,7 @@ import { useListVaults } from "@/utils/hook/vault";
 
 const NewVaultWidget: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <div
-    className="w-full p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer"
+    className="w-full p-6 rounded-xl border-2 border-dashed border-gray-400 transition-all hover:shadow-lg text-center flex flex-col items-center justify-center cursor-pointer min-h-[500px]"
     onClick={onClick}
   >
     <FaPlusCircle className="text-gray-500 text-4xl mb-3" />

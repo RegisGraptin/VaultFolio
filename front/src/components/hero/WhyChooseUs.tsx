@@ -100,7 +100,7 @@ export default function WhyChooseUs() {
         </div>
 
         {/* Supporting Stats */}
-        <div className="mt-24 border-t border-gray-100 pt-16">
+        {/* <div className="mt-24 border-t border-gray-100 pt-16">
           <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-5">
             <div className="text-center">
               <div className="text-4xl font-bold text-indigo-600">15K+</div>
@@ -133,7 +133,7 @@ export default function WhyChooseUs() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

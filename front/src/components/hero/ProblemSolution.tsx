@@ -84,8 +84,7 @@ export default function ProblemSolution() {
               Tired of managing all your DeFi positions?
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
-              Discover how our platform transforms your daily operations through
-              intuitive features and smart automation.
+              Managing your DeFi risks should be intuitive and simple.
             </p>
           </div>
 

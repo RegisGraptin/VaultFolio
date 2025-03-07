@@ -1,4 +1,19 @@
+"use client";
+
+import Image from "next/image";
+
 export default function Cta() {
+  const handleSmoothScroll = (e) => {
+    e.preventDefault();
+    const demoSection = document.getElementById("demo");
+    if (demoSection) {
+      demoSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
     <section className="relative overflow-hidden bg-gray-900 py-32 px-6">
       {/* Background Elements */}
@@ -19,7 +34,7 @@ export default function Cta() {
               </span>
             </h2>
             <p className="mt-6 text-xl leading-relaxed text-gray-300">
-              Focus on your strategy, not wallet management.
+              Focus on your strategy, not wallet management.{" "}
               <span className="block lg:inline">
                 Get started in under 2 minutes.
               </span>
@@ -28,10 +43,10 @@ export default function Cta() {
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start">
               <a
-                href="#pricing"
+                href="/dashboard"
                 className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-indigo-700 hover:shadow-xl hover:-translate-y-0.5"
               >
-                Start Free Trial
+                Start Now
                 <svg
                   className="ml-3 h-5 w-5"
                   fill="none"
@@ -48,6 +63,7 @@ export default function Cta() {
               </a>
               <a
                 href="#demo"
+                onClick={handleSmoothScroll}
                 className="inline-flex items-center justify-center rounded-xl bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur-lg transition-all hover:bg-white/20 hover:shadow-xl hover:-translate-y-0.5"
               >
                 Watch Demo
@@ -58,36 +74,36 @@ export default function Cta() {
             <div className="mt-12 flex flex-wrap items-center justify-center gap-6 lg:justify-start">
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
-                  {[1, 2, 3].map((i) => (
+                  {["punk", "milady", "pudgy"].map((i) => (
                     <img
                       key={i}
-                      src={`/avatars/${i}.jpg`}
+                      src={`/images/avatars/${i}.webp`}
                       alt="User avatar"
                       className="h-8 w-8 rounded-full border-2 border-white"
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-300">Join 1k+ users</span>
+                <span className="text-sm text-gray-300">Join now</span>
               </div>
+              {/*
               <div className="flex items-center gap-2">
-                {/* <ShieldCheckIcon className="h-6 w-6 text-green-400" /> */}
+                <ShieldCheckIcon className="h-6 w-6 text-green-400" />
                 <span className="text-sm text-gray-300">Audited Security</span>
-              </div>
+              </div> 
+              */}
             </div>
           </div>
 
           {/* Visual Element */}
           <div className="flex-1">
-            <div className="relative rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-              <div className="absolute inset-0 rounded-2xl border border-white/5"></div>
-              <div className="space-y-4 text-left">
-                <div className="h-4 w-32 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500"></div>
-                <div className="h-4 w-48 rounded-full bg-white/20"></div>
-                <div className="h-4 w-40 rounded-full bg-white/20"></div>
-                <div className="pt-4">
-                  <div className="h-12 w-full rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600"></div>
-                </div>
-              </div>
+            <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
+              <Image
+                src="/images/app/mobile-vaults.png"
+                alt="VaultFolio Vaults Dashboard"
+                width={590}
+                height={300}
+                className="rounded-2xl"
+              />
             </div>
           </div>
         </div>

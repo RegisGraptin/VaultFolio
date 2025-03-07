@@ -1,54 +1,70 @@
+"use client";
+
 import Link from "next/link";
 
 export default function Hero() {
+  const handleSmoothScroll = (e) => {
+    e.preventDefault();
+    const demoSection = document.getElementById("demo");
+    if (demoSection) {
+      demoSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-white">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
         <div className="text-center">
-          <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            DeFi shouldn't feel like a part time job
-          </p>
+          <div className="mb-8">
+            <span className="inline-block px-4 py-2 bg-blue-100/50 text-blue-600 rounded-full text-sm font-medium shadow-sm">
+              DeFi shouldn't feel like a part time job
+            </span>
+          </div>
+
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight mb-6 text-gray-900">
-          Reimagined Your DeFi Risk Management with
+            Turn DeFi Chaos into Strategic Control with
             <span className="relative inline-block mx-2">
               <span className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 blur-2xl opacity-60 animate-pulse"></span>
               <span className="relative text-blue-600">VaultFolio</span>
             </span>
           </h1>
           <p className="mt-6 text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            Isolate liquidity, automate yield strategies, and mitigate risk
-            exposure across multiple chains - all from a single unified
-            interface.
+            Isolate risks in dedicated vaults, build your own yield automations,
+            and manage all your DeFi strategies—all from one wallet.
           </p>
-
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/dashboard" title="Dashboard">
               <button className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl text-lg font-semibold text-white transition-all transform hover:scale-105 shadow-sm hover:shadow-md">
                 Get Started
               </button>
             </Link>
-            <button className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-gray-300 hover:border-blue-600 rounded-xl text-lg font-semibold text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
-              <svg
-                className="w-5 h-5 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Watch Platform Demo
-            </button>
+            <a href="#demo" title="Watch Demo" onClick={handleSmoothScroll}>
+              <button className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-gray-300 hover:border-blue-600 rounded-xl text-lg font-semibold text-gray-900 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+                <svg
+                  className="w-5 h-5 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Watch Demo
+              </button>
+            </a>
           </div>
 
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-gray-600">
@@ -64,7 +80,7 @@ export default function Hero() {
                   clipRule="evenodd"
                 />
               </svg>
-              Secure & Non-Custodial
+              Non-Custodial
             </div>
             <div className="flex items-center gap-2">
               <svg
@@ -84,11 +100,14 @@ export default function Hero() {
         </div>
 
         {/* Video Preview Section */}
-        <div className="mt-16 max-w-6xl mx-auto rounded-3xl overflow-hidden border border-gray-200 bg-white shadow-lg">
+        <div
+          id="demo"
+          className="mt-16 max-w-6xl mx-auto rounded-3xl overflow-hidden border border-gray-200 bg-white shadow-lg"
+        >
           <div className="aspect-video relative">
             <iframe
               className="w-full h-full"
-              src="https://www.youtube-nocookie.com/embed/VIDEO_ID?autoplay=0&showinfo=0&controls=1&modestbranding=1"
+              src=""
               title="Vaultfolio Platform Demo"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

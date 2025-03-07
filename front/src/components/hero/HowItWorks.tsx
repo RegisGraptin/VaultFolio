@@ -6,7 +6,7 @@ export default function HowItWorks() {
   const steps = [
     {
       title: "Set Up Your Vault",
-      description: "Name your strategy and set your risk tolerance.",
+      description: "Create your vault and defined your strategies.",
       icon: <FaVault />,
       webm: "",
       mp4: "/videos/VaultFolioDemo.mp4",
