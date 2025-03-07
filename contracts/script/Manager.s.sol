@@ -13,7 +13,7 @@ contract ManagerScript is Script {
 
     function setUp() public {}
 
-    function run() public {
+    function run() public returns (address) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
@@ -34,5 +34,7 @@ contract ManagerScript is Script {
         manager = new Manager(account, POOL_ADDRESSES_PROVIDER_ADDRESS);
 
         vm.stopBroadcast();
+        
+        return address(manager);
     }
 }
