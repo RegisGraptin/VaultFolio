@@ -25,7 +25,7 @@ contract ManagerScript is Script {
             POOL_ADDRESSES_PROVIDER_ADDRESS = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
         } else if (chainId == 534352) {  // Scroll
             POOL_ADDRESSES_PROVIDER_ADDRESS = 0x012bAC54348C0E635dCAc9D5FB99f06F24136C9A;
-        } else if (chainId == 534351) {  // Scroll Sepoli
+        } else if (chainId == 534351) {  // Scroll Sepolia
             POOL_ADDRESSES_PROVIDER_ADDRESS = 0x52A27dC690F8652288194Dd2bc523863eBdEa236;
         } else {
             revert("Unsupported network");

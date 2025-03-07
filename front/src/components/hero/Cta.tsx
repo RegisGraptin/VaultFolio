@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 export default function Cta() {
-  const handleSmoothScroll = (e) => {
+  const handleSmoothScroll = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const demoSection = document.getElementById("demo");
     if (demoSection) {

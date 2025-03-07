@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 export default function Hero() {
-  const handleSmoothScroll = (e) => {
+  const handleSmoothScroll = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const demoSection = document.getElementById("demo");
     if (demoSection) {
@@ -20,7 +20,7 @@ export default function Hero() {
         <div className="text-center">
           <div className="mb-8">
             <span className="inline-block px-4 py-2 bg-blue-100/50 text-blue-600 rounded-full text-sm font-medium shadow-sm">
-              DeFi shouldn't feel like a part time job
+              DeFi shouldn&apos;t feel like a part time job
             </span>
           </div>
 
