@@ -13,7 +13,7 @@ import {IVault} from "./interfaces/IVault.sol";
 import {IStrategy, SubscribeStrategyStruct} from "./interfaces/IStrategy.sol";
 import {IStrategyExecutor} from "./interfaces/IStrategyExecutor.sol";
 
-/// @title Vault contraact.
+/// @title Vault contract.
 /// @dev The contract acts as a wrapper to the AAVE protocol.
 /// It allows users to interact with the AAVE protocol by isolating their liquidity directly inside a smart contract.
 /// Allowing them to have a better control over their position.
@@ -118,6 +118,10 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
 
     function needExecution() external view override returns (bool) {
         for (uint256 i = 0; i < subscribedStrategies.length; i++) {
+            if (!IManager(manager).isWhitelistedStrategy(subscribedStrategies[i].strategyAddress)) {
+                continue;
+            }
+
             IStrategy strategy = IStrategy(
                 subscribedStrategies[i].strategyAddress
             );

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
+import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+
 import {IPool} from "aave-v3-core/contracts/protocol/pool/Pool.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -11,22 +14,24 @@ uint256 constant TOTAL_PERCENT = 1_000_000;
 
 struct SendStrategyParams {
     address vaultAddress;
-    address asset;
+    address yieldAsset;
+    address targetAsset;
     address to;
     uint256 minSupplyThreshold;
     uint256 percentAllocation;
     uint256 executionAfter;
 }
 
-// FIXME: Swap strategy
-// https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
-
-
-
-// FIXME: precise the owner should be the manager
-// FIXME double check subscriptionId
-contract SendStrategy is IStrategy {
+/// @title Send Token Strategy.
+/// @notice Given a yield token, convert it to the targeted token and send it to the request address.
+/// As an example, take 20% yield from USDC and convert it to ETH to send it to a custom address. 
+/// @dev For the swap, we are relying on Uniswap V3 at the moment.
+/// Documentation: https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
+contract SendTokenStrategy is IStrategy {
     
+    ISwapRouter public immutable swapRouter;
+    uint24 public constant poolFee = 3000;
+
     uint256 public subscriptionId;
 
     mapping(uint256 subscriptionId => address vaultAddress) public owner;
@@ -37,8 +42,10 @@ contract SendStrategy is IStrategy {
     error InvalidPercentAllocationError();
     error InvalidToAddressError();
 
-    // TODO: Do we want to create an additional layer blocking the subscription
-    // and only the manager can do it?
+
+    constructor(ISwapRouter _swapRouter) {
+        swapRouter = _swapRouter;
+    }
 
     function subscribe(
         bytes memory _params
@@ -53,6 +60,7 @@ contract SendStrategy is IStrategy {
         if (strategyParams.to == address(0)) {
             revert InvalidToAddressError();
         }
+        // FIXME: Check address token
 
         owner[subscriptionId] = msg.sender;
         params[subscriptionId] = strategyParams;
@@ -103,17 +111,44 @@ contract SendStrategy is IStrategy {
             return false;
         }
 
+        // TODO: 
+        // FIXME: Need to pay fee for the automation
+        // FIXME: And take fee for the procotol
+
+
         uint256 availableAmount = vaultBalance - params[_subscriptionId].minSupplyThreshold;
         uint256 amountToSend = (availableAmount * params[_subscriptionId].percentAllocation) / TOTAL_PERCENT;
 
-        // FIXME: double check for weird ERC20 issue
-        IERC20(params[_subscriptionId].asset).transfer(
-            params[_subscriptionId].to,
-            amountToSend
-        );
+        
+        // Transfer the specified amount of DAI to this contract.
+        TransferHelper.safeTransferFrom(params[_subscriptionId].asset, msg.sender, address(this), amountToSend);
 
-        // Event
+        // Approve the router to spend DAI.
+        TransferHelper.safeApprove(params[_subscriptionId].asset, address(swapRouter), amountToSend);
 
+        // FIXME: Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
+
+        // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.
+        ISwapRouter.ExactInputSingleParams memory params =
+            ISwapRouter.ExactInputSingleParams({
+                tokenIn: params[_subscriptionId].asset,
+                tokenOut: params[_subscriptionId].targetAsset,
+                fee: poolFee,
+                recipient: params[_subscriptionId].to,
+                deadline: block.timestamp,
+                amountIn: amountToSend,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+
+        // The call to `exactInputSingle` executes the swap.
+        amountOut = swapRouter.exactInputSingle(params);
+
+
+        // FIXME: Do we want a customizable strategy for this one?
+
+        emit StrategyExecuted(_subscriptionId);
+        
         return true;
     }
 }
