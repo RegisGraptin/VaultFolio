@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import VaultAssetInfo from "../common/VaultAssetInfo";
 import VaultWithdrawFormModal from "./VaultWithdrawFormModal";
 import ActionButton from "@/components/button/ActionButton";
+import { usePortfolioBorrowing, usePortfolioLending } from "@/utils/hook/vault";
 
 const VaultSupplyRow = ({
   vaultAddress,
@@ -61,6 +62,14 @@ const VaultSupplyRow = ({
       token: lending_token.address,
     }
   );
+
+  const { totalBorrowing } = usePortfolioBorrowing({
+    vaultAddress,
+  });
+
+  const { totalLending } = usePortfolioLending({
+    vaultAddress,
+  });
 
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
 
@@ -166,6 +175,8 @@ const VaultSupplyRow = ({
               modalProps={{
                 vaultAddress,
                 assetAddress,
+                totalLending: totalLending,
+                totalBorrowing: totalBorrowing,
                 onClose: async () => {
                   // Refresh the vault & user balance
                   await refetchUserBalance();

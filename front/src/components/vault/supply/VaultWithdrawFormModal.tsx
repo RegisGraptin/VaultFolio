@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { LENDING_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Address, formatUnits, getAddress, parseUnits } from "viem";
 import {
   useAccount,
@@ -22,12 +22,16 @@ interface ModalProps {
   onClose: () => void;
   vaultAddress: Address;
   assetAddress: Address;
+  totalLending: Number | undefined;
+  totalBorrowing: Number | undefined;
 }
 
 const VaultWithdrawFormModal: React.FC<ModalProps> = ({
   onClose,
   vaultAddress,
   assetAddress,
+  totalLending,
+  totalBorrowing,
 }) => {
   let token: Token = TOKEN_ASSETS[assetAddress.toLowerCase()];
   let lending_token: Token = LENDING_TOKENS[assetAddress.toLowerCase()];
@@ -81,10 +85,31 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
       (vaultBalance &&
         parseUnits(amount.toString(), vaultBalance?.decimals) >
           vaultBalance?.value) ||
+      (maxWithdrawAmount &&
+        parseUnits(amount.toString(), token.decimals) > maxWithdrawAmount) ||
       isWithdrawing ||
       isTxWithdrawLoading
     );
   };
+
+  const maxWithdrawAmount = useMemo(() => {
+    if (
+      vaultBalance === undefined ||
+      totalLending === undefined ||
+      totalBorrowing === undefined
+    )
+      return BigInt(0);
+
+    if (totalBorrowing === 0) return vaultBalance.value;
+
+    const maxWithdrawAmount =
+      vaultBalance.value -
+      (BigInt(3) *
+        parseUnits(totalBorrowing.toString(), vaultBalance.decimals)) /
+        BigInt(2);
+
+    return maxWithdrawAmount > 0 ? maxWithdrawAmount : BigInt(0);
+  }, [vaultBalance, totalLending, totalBorrowing]);
 
   return (
     <div className="relative mx-auto w-full max-w-[24rem] rounded-xl bg-white shadow-lg">
@@ -125,14 +150,14 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
               <span className="text-sm text-gray-500">Vault balance</span>
               <span className="text-sm font-medium text-gray-700">
                 {vaultBalance
-                  ? formatBalance(vaultBalance.value, vaultBalance.decimals)
+                  ? formatBalance(maxWithdrawAmount, vaultBalance.decimals)
                   : "0.00"}
               </span>
               <button
                 onClick={() =>
                   vaultBalance
                     ? setAmount(
-                        formatUnits(vaultBalance!.value, vaultBalance.decimals)
+                        formatUnits(maxWithdrawAmount, vaultBalance.decimals)
                       )
                     : () => {}
                 }
@@ -188,7 +213,7 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
                         parseUnits(amount, vaultBalance.decimals),
                       vaultBalance.decimals
                     )
-                  : "0.00"
+                  : formatBalance(vaultBalance.value, vaultBalance.decimals)
                 : "0.00"}{" "}
               {token.symbol}
             </span>
