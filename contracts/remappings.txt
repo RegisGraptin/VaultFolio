@@ -9,4 +9,5 @@ forge-std/=lib/forge-std/src/
 halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 solidity-utils/=lib/aave-v3-origin/lib/solidity-utils/
+@uniswap/v3-core/=lib/v3-core/
 @uniswap/v3-periphery/=lib/v3-periphery/contracts/

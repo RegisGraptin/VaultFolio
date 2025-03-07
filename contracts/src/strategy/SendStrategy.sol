@@ -82,7 +82,7 @@ contract SendTokenStrategy is IStrategy {
 
     function _isExecutable(uint256 _subscriptionId) internal view returns (bool) {
         return (lastExecution[_subscriptionId] <= block.timestamp &&
-            IERC20(params[_subscriptionId].asset).balanceOf(
+            IERC20(params[_subscriptionId].yieldAsset).balanceOf(
                 params[_subscriptionId].vaultAddress
             ) >
             params[_subscriptionId].minSupplyThreshold);
@@ -103,7 +103,7 @@ contract SendTokenStrategy is IStrategy {
         // Update last execution
         lastExecution[_subscriptionId] = block.timestamp + params[_subscriptionId].executionAfter;
 
-        uint256 vaultBalance = IERC20(params[_subscriptionId].asset).balanceOf(
+        uint256 vaultBalance = IERC20(params[_subscriptionId].yieldAsset).balanceOf(
             params[_subscriptionId].vaultAddress
         );
 
@@ -121,17 +121,17 @@ contract SendTokenStrategy is IStrategy {
 
         
         // Transfer the specified amount of DAI to this contract.
-        TransferHelper.safeTransferFrom(params[_subscriptionId].asset, msg.sender, address(this), amountToSend);
+        TransferHelper.safeTransferFrom(params[_subscriptionId].yieldAsset, msg.sender, address(this), amountToSend);
 
         // Approve the router to spend DAI.
-        TransferHelper.safeApprove(params[_subscriptionId].asset, address(swapRouter), amountToSend);
+        TransferHelper.safeApprove(params[_subscriptionId].yieldAsset, address(swapRouter), amountToSend);
 
         // FIXME: Naively set amountOutMinimum to 0. In production, use an oracle or other data source to choose a safer value for amountOutMinimum.
 
         // We also set the sqrtPriceLimitx96 to be 0 to ensure we swap our exact input amount.
-        ISwapRouter.ExactInputSingleParams memory params =
+        ISwapRouter.ExactInputSingleParams memory uniswapParams =
             ISwapRouter.ExactInputSingleParams({
-                tokenIn: params[_subscriptionId].asset,
+                tokenIn: params[_subscriptionId].yieldAsset,
                 tokenOut: params[_subscriptionId].targetAsset,
                 fee: poolFee,
                 recipient: params[_subscriptionId].to,
@@ -142,7 +142,7 @@ contract SendTokenStrategy is IStrategy {
             });
 
         // The call to `exactInputSingle` executes the swap.
-        amountOut = swapRouter.exactInputSingle(params);
+        uint256 amountOut = swapRouter.exactInputSingle(uniswapParams);
 
 
         // FIXME: Do we want a customizable strategy for this one?
