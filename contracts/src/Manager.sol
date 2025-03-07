@@ -1,33 +1,31 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {AutomationCompatibleInterface} from "chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 import {IManager} from "./interfaces/IManager.sol";
 import {IVault} from "./interfaces/IVault.sol";
 import {Vault} from "./Vault.sol";
 
-contract Manager is IManager, Ownable, AutomationCompatibleInterface {
+/// @title Vault Manager
+/// @dev The contract is responsible for creating and managing vaults.
+/// It also implements the Chainlink's Automation interface to automate the execution of strategies.
+contract Manager is IManager, Ownable {
 
+    /// @notice Address of the AAVE Pool Address Provider allowing us to fetch the pool address
+    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS;
 
-    // For automate action, we can have the possibility to add forwarer address 
-    // from chainlink allowing us to have a trusted address that execute the stratgies
-    // https://docs.chain.link/chainlink-automation/guides/forwarder
-    // Need to think if we want to add this check.
-    // Not sure as we want to execute them when their are ready.
-    // => Any one could run this
-
-    
-
-    // AAVE Referral code - TBD as not available at the moment
+    /// @notice AAVE Referral code (Not applicable at the moment)
     uint16 public aaveReferralCode = 0;
 
+    /// @notice Addresses' list of all vaults
+    address[] public allVaults;
 
-    address[] public allVaults;  // FIXME: 
+    /// @notice Mapping of user to vaults
     mapping (address user => address[] vaults) public vaults; 
 
-    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS;
+    /// @notice Indicate if a strategy is whitelisted
+    mapping (address strategyAddress => bool whitelisted) public isWhitelistedStrategy;
 
     constructor(
         address owner_,
@@ -46,20 +44,14 @@ contract Manager is IManager, Ownable, AutomationCompatibleInterface {
         emit VaultCreated(address(vault), msg.sender);
     }
 
-    
-
+    /// @notice Set the possibility to update the AAVE referral code
     function setAaveReferralCode(uint16 _aaveReferralCode) public onlyOwner {
         aaveReferralCode = _aaveReferralCode;
     }
 
-
-
     function getVaults(address user) public view returns (address[] memory) {
         return vaults[user];
     }
-
-    // FIXME: Check how can I saved the vault value
-    // Need to avoid any malicious attack that can call it
 
     //////////////////////////////////////////////////////////////////
     /// Strategies automation
@@ -104,8 +96,15 @@ contract Manager is IManager, Ownable, AutomationCompatibleInterface {
         for (uint256 i = 0; i < length; i++) trimmed[i] = array[i];
         return trimmed;
     }
+    
+    function whitelistStrategy(address strategy) external override onlyOwner {
+        isWhitelistedStrategy[strategy] = true;
+        emit WhitelistStrategy(strategy);
+    }
+
+    function unwhitelistStrategy(address strategy) external override onlyOwner {
+        isWhitelistedStrategy[strategy] = false;
+        emit UnwhitelistStrategy(strategy);
+    }
 
 }
-
-// FIXME: limitation: what happened if I have more than thousands vaults to check?
-// Reach the gas limit?

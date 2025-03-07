@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 
@@ -7,7 +7,10 @@ struct SubscribeStrategyStruct {
     uint256 subscriptionId;
 }
 
-/// Strategy Interface used by the Vault to execute automate actions.
+/// @title Strategy Interface
+/// @notice Defines a standard interface for creating new strategies.
+/// @dev Implementations must handle parameter validation, state management, and execution logic.
+/// @dev Each strategy registered will be defined by a subscription id.
 interface IStrategy {
 
     /// @notice Returns the last execution timestamp of a strategy.

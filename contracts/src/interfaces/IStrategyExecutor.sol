@@ -1,22 +1,18 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
-
-// FIXME: double check subscriptionId
 
 /// @title Strategy Execution Interface
 /// @notice Standard interface for managing and executing modular strategies
-/// @dev Implementations should handle strategy storage, validation, and execution logic
+/// @dev Implementations must handle strategy management by subscribing to new one and requesting to execute them.
 interface IStrategyExecutor {
     
-    // FIXME: Do I want to defined the subscriptionId ??
-    
     event StrategyAdded(
-        uint256 strategyId,
         address strategyAddress,
+        uint256 subscribeStrategyId,
         bytes params
     );
-    event StrategyRemoved(uint256 strategyId, address strategyAddress);
-    event StrategyExecuted(uint256 strategyId, address strategyAddress, uint256 subscriptionId);
+    event StrategyRemoved(address strategyAddress, uint256 subscriptionId);
+    event StrategyExecuted(address strategyAddress, uint256 subscriptionId);
 
     error InvalidStrategyId(uint256 strategyId);
 

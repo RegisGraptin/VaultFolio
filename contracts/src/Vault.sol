@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IPool} from "aave-v3-core/contracts/protocol/pool/Pool.sol";
@@ -11,28 +10,30 @@ import {IPoolAddressesProvider} from "aave-v3-core/contracts/protocol/configurat
 
 import {IManager} from "./interfaces/IManager.sol";
 import {IVault} from "./interfaces/IVault.sol";
-import {IStrategy} from "./interfaces/IStrategy.sol";
+import {IStrategy, SubscribeStrategyStruct} from "./interfaces/IStrategy.sol";
 import {IStrategyExecutor} from "./interfaces/IStrategyExecutor.sol";
 
-import {SubscribeStrategyStruct} from "./interfaces/IStrategy.sol";
-
+/// @title Vault contraact.
+/// @dev The contract acts as a wrapper to the AAVE protocol.
+/// It allows users to interact with the AAVE protocol by isolating their liquidity directly inside a smart contract.
+/// Allowing them to have a better control over their position.
+/// The contract also allows the user to subscribe to strategies that will be executed automatically.
+/// The strategies are owned by the manager.
 contract Vault is IVault, Ownable, ReentrancyGuard {
-    /// Logic of the smart contract
-    /// It should store all the representation value of AAVE, meaning the aToken
-    /// from a lending position or the debt token from a borrowing position.
-    ///
-    /// All the liqudity should remained to the user.
-
-    // Notice the wraped token stays in the vault
-
+    
+    /// @notice Address of the AAVE Pool Address Provider allowing us to fetch the pool address
     address public immutable POOL_ADDRESSES_PROVIDER_ADDRESS;
 
+    /// @notice Address of the manager
     address public immutable manager;
+    
     uint8 public color;
     string public name;
 
+    /// @notice Number of activated strategies in the vault.
     uint256 public numberOfActivatedStrategies;
 
+    /// @notice List of strategies subscribed by the vault.
     SubscribeStrategyStruct[] public subscribedStrategies;
 
     constructor(
@@ -70,7 +71,6 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
     }
 
     function withdraw(address asset, uint256 amount) external {
-        // Withdraw the vault position and send back the token to the users
         IPool(_aavePoolAddress()).withdraw(asset, amount, msg.sender);
         emit Withdraw(asset, amount);
     }
@@ -80,7 +80,6 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         uint256 amount,
         uint256 interestRateMode
     ) external {
-        // interestRateMode: 1 for Stable, 2 for Variable
         IPool(_aavePoolAddress()).borrow(
             asset,
             amount,
@@ -88,26 +87,17 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
             IManager(manager).aaveReferralCode(),
             address(this)
         );
-
-        // Send the token to the users
-        // Isolate the debt in the smart contract
         IERC20(asset).transfer(msg.sender, amount);
-
         emit Borrow(asset, amount, interestRateMode);
     }
 
-    // * @return The actual amount being repaid
-    // Possibility to defined type(uint256).max
-    // In order to avoid remainign dust in the SC
     function repay(
         address asset,
         uint256 amount,
         uint256 interestRateMode
     ) external returns (uint256) {
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
-
         IERC20(asset).approve(_aavePoolAddress(), amount);
-
         uint256 amountRepaid = IPool(_aavePoolAddress()).repay(
             asset,
             amount,
@@ -146,7 +136,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         address strategyAddress,
         bytes memory params
     ) external override onlyOwner returns (uint256) {
-        // FIXME: Check if manager is whitelisted and have access to the strategy
+        require(IManager(manager).isWhitelistedStrategy(strategyAddress), "Strategy not whitelisted");
 
         // Get a new subscription id and add the strategy to the vault's list
         uint256 subscribeStrategyId = IStrategy(strategyAddress).subscribe(
@@ -156,40 +146,38 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         subscribedStrategies.push(
             SubscribeStrategyStruct(strategyAddress, subscribeStrategyId)
         );
-
         numberOfActivatedStrategies++;
 
-        // FIXME: TBM
         emit StrategyAdded(
-            numberOfActivatedStrategies - 1,
             strategyAddress,
+            subscribeStrategyId,
             params
         );
         return numberOfActivatedStrategies - 1;
     }
 
-    // FIXME: remove params and delegate the management to the strategy
-    // Plus add a strategyId to know which params used in the strategy.
-
     function removeStrategy(uint256 strategyId) external override onlyOwner {
         if (strategyId >= numberOfActivatedStrategies) {
             revert InvalidStrategyId(strategyId);
         }
-        address strategyAddress = subscribedStrategies[strategyId]
-            .strategyAddress;
+        address strategyAddress = subscribedStrategies[strategyId].strategyAddress;
+        uint256 subscriptionId = subscribedStrategies[strategyId].subscriptionId;
 
-        subscribedStrategies[strategyId] = subscribedStrategies[
-            subscribedStrategies.length - 1
-        ];
-
+        // Remove the strategy and optimize the list of strategies
+        subscribedStrategies[strategyId] = subscribedStrategies[subscribedStrategies.length - 1];
         subscribedStrategies.pop();
         numberOfActivatedStrategies--;
 
-        emit StrategyRemoved(strategyId, strategyAddress);
+        emit StrategyRemoved(strategyAddress, subscriptionId);
     }
 
     function executeStrategies() external override onlyManager nonReentrant {
         for (uint256 i = 0; i < subscribedStrategies.length; i++) {
+            // Be sure the strategy is still whitelisted
+            if (!IManager(manager).isWhitelistedStrategy(subscribedStrategies[i].strategyAddress)) {
+                continue;
+            }
+
             IStrategy strategy = IStrategy(
                 subscribedStrategies[i].strategyAddress
             );
@@ -200,7 +188,6 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
             if (executable) {
                 strategy.execute(subscribedStrategies[i].subscriptionId);
                 emit StrategyExecuted(
-                    i,
                     subscribedStrategies[i].strategyAddress,
                     subscribedStrategies[i].subscriptionId
                 );

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import {IPool} from "aave-v3-core/contracts/protocol/pool/Pool.sol";
@@ -25,11 +25,11 @@ struct SendStrategyParams {
 
 // FIXME: precise the owner should be the manager
 // FIXME double check subscriptionId
-contract SendStrategy is IStrategy, Ownable {
-    constructor(address owner_) Ownable(owner_) {}
-
+contract SendStrategy is IStrategy {
+    
     uint256 public subscriptionId;
 
+    mapping(uint256 subscriptionId => address vaultAddress) public owner;
     mapping(uint256 => SendStrategyParams) public params;
     mapping(uint256 => uint256 timestamps) public lastExecution;
     mapping(uint256 => bool) public activated;
@@ -37,9 +37,12 @@ contract SendStrategy is IStrategy, Ownable {
     error InvalidPercentAllocationError();
     error InvalidToAddressError();
 
+    // TODO: Do we want to create an additional layer blocking the subscription
+    // and only the manager can do it?
+
     function subscribe(
         bytes memory _params
-    ) external override onlyOwner returns (uint256) {
+    ) external override returns (uint256) {
         SendStrategyParams memory strategyParams = abi.decode(_params, (SendStrategyParams));
         if (
             strategyParams.percentAllocation == 0 ||
@@ -51,6 +54,7 @@ contract SendStrategy is IStrategy, Ownable {
             revert InvalidToAddressError();
         }
 
+        owner[subscriptionId] = msg.sender;
         params[subscriptionId] = strategyParams;
         activated[subscriptionId] = true;
         subscriptionId++;
@@ -58,16 +62,17 @@ contract SendStrategy is IStrategy, Ownable {
         return subscriptionId - 1;
     }
 
-    function unsubscribe(uint256 _subscriptionId) external override onlyOwner {
+    function unsubscribe(uint256 _subscriptionId) external override {
         activated[_subscriptionId] = false;
 
+        delete owner[subscriptionId];
         delete params[_subscriptionId];
         delete lastExecution[_subscriptionId];
 
         emit StrategyUnubscribed(_subscriptionId);
     }
 
-    function _isExecutable (uint256 _subscriptionId) internal view returns (bool) {
+    function _isExecutable(uint256 _subscriptionId) internal view returns (bool) {
         return (lastExecution[_subscriptionId] <= block.timestamp &&
             IERC20(params[_subscriptionId].asset).balanceOf(
                 params[_subscriptionId].vaultAddress
@@ -83,22 +88,23 @@ contract SendStrategy is IStrategy, Ownable {
 
     function execute(
         uint256 _subscriptionId
-    ) external override onlyOwner returns (bool) {
-        if (!_isExecutable(_subscriptionId)) {
-            // FIXME: should we revert instead?
-            return false;
-        }
-
+    ) external override returns (bool) {
+        require(owner[subscriptionId] == msg.sender, "Not allowed");
+        require(_isExecutable(_subscriptionId), "Not executable");
+        
         // Update last execution
-        lastExecution[_subscriptionId] =
-            block.timestamp +
-            params[_subscriptionId].executionAfter;
+        lastExecution[_subscriptionId] = block.timestamp + params[_subscriptionId].executionAfter;
 
         uint256 vaultBalance = IERC20(params[_subscriptionId].asset).balanceOf(
             params[_subscriptionId].vaultAddress
         );
-        uint256 amountToSend = (vaultBalance *
-            params[_subscriptionId].percentAllocation) / TOTAL_PERCENT;
+
+        if (vaultBalance <= params[_subscriptionId].minSupplyThreshold) {
+            return false;
+        }
+
+        uint256 availableAmount = vaultBalance - params[_subscriptionId].minSupplyThreshold;
+        uint256 amountToSend = (availableAmount * params[_subscriptionId].percentAllocation) / TOTAL_PERCENT;
 
         // FIXME: double check for weird ERC20 issue
         IERC20(params[_subscriptionId].asset).transfer(
