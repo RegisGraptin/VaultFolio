@@ -1,10 +1,10 @@
 import { DEBT_TOKENS, Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
-import { Address, erc20Abi, getAddress } from "viem";
+import { Address, erc20Abi, getAddress, parseUnits } from "viem";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
 import VaultAssetInfo from "../common/VaultAssetInfo";
 import { useOracle, usePriceOracle } from "@/utils/hook/oracle";
 import { ReserveDataLegacy, useAave } from "@/utils/hook/aave";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PopupButton from "@/components/button/PopupButton";
 import VaultBorrowFormModal from "./VaultBorrowFormModal";
 import VaultRepayFormModal from "./VaultRepayFormModal";
@@ -37,7 +37,7 @@ const VaultBorrowRow = ({
 
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
 
-  const { data: oraclePriceUSD } = usePriceOracle(
+  const { data: oraclePriceUsd } = usePriceOracle(
     addressPriceOracle,
     "getAssetPrice",
     [getAddress(assetAddress)]
@@ -59,6 +59,25 @@ const VaultBorrowRow = ({
   const { totalLending } = usePortfolioLending({
     vaultAddress,
   });
+
+  const availableToBorrowUSD = useMemo(() => {
+    if (totalLending === undefined || totalBorrowing === undefined) return 0;
+
+    // Calculate maximum borrow to maintain HF >= 1.5
+    const maxBorrowForHF = (Number(totalLending) * 2) / 3; // Divide by 1.5 using integer math
+    const safeBorrowCapacity = maxBorrowForHF - Number(totalBorrowing);
+
+    return safeBorrowCapacity > 0 ? safeBorrowCapacity : 0;
+  }, [totalLending, totalBorrowing]);
+
+  const availableToBorrow = useMemo(() => {
+    if (!oraclePriceUsd || availableToBorrowUSD === 0) return 0;
+
+    return (
+      Number(parseUnits(availableToBorrowUSD.toString(), 8)) /
+      Number(oraclePriceUsd)
+    );
+  }, [availableToBorrowUSD, oraclePriceUsd]);
 
   useEffect(() => {
     if (reserveData) {
@@ -86,7 +105,7 @@ const VaultBorrowRow = ({
       Icon={GiReceiveMoney}
       aria-label={`Borrow ${token.name}`}
       onClick={onClick}
-      disabled={false} // FIXME: check health factor
+      disabled={availableToBorrow == undefined || availableToBorrow == 0}
     />
   );
 
@@ -98,7 +117,7 @@ const VaultBorrowRow = ({
       onClick={onClick}
       disabled={
         userDebtTokenBalance && userDebtTokenBalance.value === BigInt(0)
-      } // FIXME: check if borrow balance > 0
+      }
     />
   );
 
@@ -117,11 +136,11 @@ const VaultBorrowRow = ({
           <VaultAssetInfo
             token={token}
             userBalanceToken={userBalanceToken}
-            oraclePriceUSD={oraclePriceUSD as bigint}
+            oraclePriceUSD={oraclePriceUsd as bigint}
           />
         </th>
         <td className="px-6 py-4">
-          {apy !== undefined && (
+          {apy !== undefined && ( // FIXME: check if borrow balance > 0
             <div className="text-center flex-shrink-0">
               <div
                 className={`text-sm font-medium ${Number(apy) > 0 ? "text-red-700" : ""}`}
@@ -143,7 +162,7 @@ const VaultBorrowRow = ({
                   )}
                 </div>
 
-                {(oraclePriceUSD as BigInt) &&
+                {(oraclePriceUsd as BigInt) &&
                   userDebtTokenBalance &&
                   userDebtTokenBalance.value > 0 && (
                     <div className="text-sm text-gray-500">
@@ -151,7 +170,7 @@ const VaultBorrowRow = ({
                       {convertAssetToUSD(
                         userDebtTokenBalance.value,
                         userDebtTokenBalance.decimals,
-                        oraclePriceUSD as bigint
+                        oraclePriceUsd as bigint
                       )}
                     </div>
                   )}

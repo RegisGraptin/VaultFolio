@@ -10,9 +10,10 @@ const VaultDetailWidget = ({ vaultAddress }: { vaultAddress: Address }) => {
     vaultAddress,
   });
 
-  const netApy =
-    (totalLending * lendingAPY - totalBorrowing * borrowingAPY) /
-    (totalLending - totalBorrowing);
+  const netApy = totalLending
+    ? (totalLending * lendingAPY - totalBorrowing * borrowingAPY) /
+      (totalLending - totalBorrowing)
+    : 0;
 
   return (
     <WidgetLayout>
@@ -63,10 +64,12 @@ const VaultDetailWidget = ({ vaultAddress }: { vaultAddress: Address }) => {
             <span className="text-sm text-gray-500">Interest</span>
             <p className="text-lg font-semibold text-red-600">
               -
-              {displayFormattedBalance(
-                (totalBorrowing * borrowingAPY) / totalLending
-              )}
-              % ($
+              {totalLending
+                ? `${displayFormattedBalance(
+                    (totalBorrowing * borrowingAPY) / totalLending
+                  )}%`
+                : "0.00%"}{" "}
+              ($
               {displayFormattedBalance((totalBorrowing * borrowingAPY) / 100)})
             </p>
           </div>
@@ -84,7 +87,9 @@ const VaultDetailWidget = ({ vaultAddress }: { vaultAddress: Address }) => {
           <div>
             <span className="text-sm text-gray-500">LTV</span>
             <p className="text-lg font-semibold">
-              {displayFormattedBalance((totalBorrowing / totalLending) * 100)}%
+              {totalLending
+                ? `${displayFormattedBalance((totalBorrowing / totalLending) * 100)}%`
+                : "-"}
             </p>
           </div>
         </div>
