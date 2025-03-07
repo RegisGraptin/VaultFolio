@@ -1,7 +1,35 @@
-# AutoScroll
+<a id="readme-top"></a>
 
-Build for the Open Scroll Hackathon
-https://open.scroll.io/
+<br />
+<div align="center">
+  <a href="https://github.com/RegisGraptin/VaultFolio">
+    <img src="./front/public/images/logo.svg" alt="Logo" width="250" height="250">
+  </a>
+
+<h3 align="center">VaultFolio</h3>
+<p align="center" style="font-style: italic; font-size: 1.2em;">Built during <a href="https://open.scroll.io" title="Scroll Open Hackathon">Scroll Open Hackathon</a></p>
+  <p align="center">
+    A decentralized confidential single-price auction for tokens with sealed bids.
+    <br />
+    <br />
+    <a href="https://github.com/RegisGraptin/VaultFolio">Code</a>
+    &middot;
+    <a href="https://www.vaultfolio.xyz/">View Demo</a>
+    &middot;
+    <a href="">Video Presentation [TBD]</a>
+    
+  </p>
+</div>
+
+
+## About The Project
+
+
+## Features
+
+## How does it works 
+
+
 
 ## Accounts / Vaults
 
@@ -50,3 +78,8 @@ https://aave.com/docs/developers/smart-contracts/pool
 > https://demos.creative-tim.com/material-tailwind-dashboard-react/#/dashboard/home
 
 https://www.landingfolio.com/library/hero/react
+
+
+## Design limit:
+
+- Think how we can automate thousands of vault. Is it still manageable? Is it viable to iterate over all the vaults even in view function?
