@@ -1,6 +1,13 @@
+import Vault from "@/abi/Vault.json";
 import { LENDING_TOKENS, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import { useEffect, useState } from "react";
-import { Address, formatUnits } from "viem";
+import {
+  Address,
+  encodeAbiParameters,
+  formatUnits,
+  getAddress,
+  parseUnits,
+} from "viem";
 import { AssetTokenSelect } from "./AssetTokenSelect";
 import {
   useAccount,
@@ -30,7 +37,7 @@ const AutomateRewardSplitModal: React.FC<ModalProps> = ({
     isPending: txIsPending,
   } = useWriteContract();
 
-  const { data: txReceipt, isLoading: isConfirming } =
+  const { isSuccess: isTxAutomateConfirmed, isLoading: isConfirming } =
     useWaitForTransactionReceipt({
       hash,
     });
@@ -38,7 +45,7 @@ const AutomateRewardSplitModal: React.FC<ModalProps> = ({
   const [formData, setFormData] = useState({
     yieldAsset: "",
     targetAsset: "",
-    to: userAddress,
+    to: (userAddress as string) || "",
     minSupplyThreshold: "",
     percentAllocation: "",
     executionAfter: "",
@@ -66,7 +73,53 @@ const AutomateRewardSplitModal: React.FC<ModalProps> = ({
 
   const handleSubmit = () => {
     // Handle form submission
+
+    // Parse the amount into bigint to handle it in the smart contract
+    const minSupplyThreshold = parseUnits(
+      formData.minSupplyThreshold,
+      TOKEN_ASSETS[formData.yieldAsset].decimals
+    );
+
+    const percentAllocation =
+      (BigInt(formData.percentAllocation) * BigInt(1_000_000)) / BigInt(100);
+
+    const executionAfter =
+      BigInt(formData.executionAfter) * BigInt(24 * 60 * 60);
+
+    const params = encodeAbiParameters(
+      [
+        { type: "address" }, // vaultAddress
+        { type: "address" }, // yieldAsset
+        { type: "address" }, // targetAsset
+        { type: "address" }, // to
+        { type: "uint256" }, // minSupplyThreshold
+        { type: "uint256" }, // percentAllocation
+        { type: "uint256" }, // executionAfter
+      ],
+      [
+        vaultAddress,
+        getAddress(formData.yieldAsset),
+        getAddress(formData.targetAsset),
+        getAddress(formData.to),
+        minSupplyThreshold,
+        percentAllocation,
+        executionAfter,
+      ]
+    );
+
+    writeContract({
+      address: vaultAddress,
+      abi: Vault.abi,
+      functionName: "addStrategy",
+      args: [process.env.NEXT_PUBLIC_STRATEGY_REWARD_SPLIT, params],
+    });
   };
+
+  useEffect(() => {
+    if (isTxAutomateConfirmed) {
+      onClose();
+    }
+  }, [isTxAutomateConfirmed]);
 
   return (
     <div className="relative mx-auto w-full max-w-2xl rounded-xl bg-white shadow-xl">

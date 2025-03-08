@@ -23,10 +23,8 @@ const RewardSplitButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
 const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
   // Temporary data - replace with your actual data source
   const existingAutomations: {
-    id: number;
     type: string;
     params: any;
-    vault: Address;
     status: string;
   }[] = [];
   //   {
@@ -68,9 +66,9 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
           )}
 
           {existingAutomations &&
-            existingAutomations.map((auto) => (
+            existingAutomations.map((auto, index) => (
               <div
-                key={auto.id}
+                key={index}
                 className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start mb-2">
