@@ -25,6 +25,13 @@ import { useQueries } from "@tanstack/react-query";
 const SCROLL_BLOCK_TIME = 3; // 3s
 const BLOCK_PER_DAY = Math.round((60 * 60 * 24) / SCROLL_BLOCK_TIME);
 
+export interface Allocation {
+  symbol: string;
+  decimals: number;
+  usdPrice: number;
+  balances: number[];
+}
+
 export function useVault<TFunctionName extends string>(
   vaultAddress: Address | string | undefined,
   functionName: TFunctionName,
@@ -65,6 +72,9 @@ const usePortfolio = ({
   const [total, setTotal] = useState<number>(0);
   const [totalAPY, setTotalAPY] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [allocations, setAllocations] = useState<Record<string, Allocation>>(
+    {}
+  );
 
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
   const tokenAddresses = useMemo(() => Object.keys(tokens), [tokens]);
@@ -110,6 +120,8 @@ const usePortfolio = ({
       let calculatedTotal = 0;
       let apyNumerator = 0;
 
+      const newAllocation: Record<string, Allocation> = {};
+
       tokenAddresses.forEach((address, index) => {
         const balance = tokenBalances[index].result;
         const price = tokenPrices[index].result;
@@ -136,16 +148,27 @@ const usePortfolio = ({
 
           calculatedTotal += tokenValue;
           apyNumerator += tokenValue * apy;
+
+          if (!newAllocation[address]) {
+            newAllocation[address] = {
+              symbol: "",
+              decimals: decimals,
+              usdPrice: Number(price),
+              balances: Array(1).fill(0),
+            };
+          }
+          newAllocation[address].balances[0] = Number(balance);
         }
       });
 
       setTotal(calculatedTotal);
       setTotalAPY(calculatedTotal > 0 ? apyNumerator / calculatedTotal : 0);
+      setAllocations(newAllocation);
       setIsLoading(false);
     }
   }, [aaveTokenDetails, tokenBalances, tokenPrices, tokenAddresses, tokens]);
 
-  return { total, totalAPY, isLoading };
+  return { total, totalAPY, allocations, isLoading };
 };
 
 // Specific hooks
@@ -154,12 +177,12 @@ export const usePortfolioLending = ({
 }: {
   vaultAddress: Address;
 }) => {
-  const { total, totalAPY, isLoading } = usePortfolio({
+  const { total, totalAPY, allocations, isLoading } = usePortfolio({
     vaultAddress,
     tokens: LENDING_TOKENS,
     mode: "lending",
   });
-  return { totalLending: total, lendingAPY: totalAPY, isLoading };
+  return { totalLending: total, lendingAPY: totalAPY, allocations, isLoading };
 };
 
 export const usePortfolioBorrowing = ({
@@ -167,12 +190,17 @@ export const usePortfolioBorrowing = ({
 }: {
   vaultAddress: Address;
 }) => {
-  const { total, totalAPY, isLoading } = usePortfolio({
+  const { total, totalAPY, allocations, isLoading } = usePortfolio({
     vaultAddress,
     tokens: DEBT_TOKENS,
     mode: "borrowing",
   });
-  return { totalBorrowing: total, borrowingAPY: totalAPY, isLoading };
+  return {
+    totalBorrowing: total,
+    borrowingAPY: totalAPY,
+    allocations,
+    isLoading,
+  };
 };
 
 export const usePortfolioHistory = ({
@@ -306,13 +334,6 @@ export const usePortfolioHistory = ({
 
   return { variation, balances, isLoading };
 };
-
-export interface Allocation {
-  symbol: string;
-  decimals: number;
-  usdPrice: number;
-  balances: number[];
-}
 
 export const allocationToUsd = (allocation: Allocation) => {
   const totalBalance = allocation.balances.reduce(

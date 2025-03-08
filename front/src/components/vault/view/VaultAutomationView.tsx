@@ -1,23 +1,49 @@
+import PopupButton from "@/components/button/PopupButton";
 import { Address } from "viem";
+import AutomateRewardSplitModal from "../automation/AutomateRewardSplitModal";
+
+const RewardSplitButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className="p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 transition-colors group"
+    >
+      <div className="text-center">
+        <div className="text-lg font-semibold text-gray-800 group-hover:text-blue-600">
+          Reward Split Automation
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Automatically split lending rewards between BTC and ETH
+        </p>
+      </div>
+    </button>
+  );
+};
 
 const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
   // Temporary data - replace with your actual data source
-  const existingAutomations = [
-    {
-      id: 1,
-      type: "Weekly Loan Repayment",
-      params: { percentage: 15 },
-      vault: vaultAddress,
-      status: "active",
-    },
-    {
-      id: 2,
-      type: "Reward Split",
-      params: { assets: ["BTC", "ETH"], split: [50, 50] },
-      vault: vaultAddress,
-      status: "inactive",
-    },
-  ];
+  const existingAutomations: {
+    id: number;
+    type: string;
+    params: any;
+    vault: Address;
+    status: string;
+  }[] = [];
+  //   {
+  //     id: 1,
+  //     type: "Weekly Loan Repayment",
+  //     params: { percentage: 15 },
+  //     vault: vaultAddress,
+  //     status: "active",
+  //   },
+  //   {
+  //     id: 2,
+  //     type: "Reward Split",
+  //     params: { assets: ["BTC", "ETH"], split: [50, 50] },
+  //     vault: vaultAddress,
+  //     status: "inactive",
+  //   },
+  // ];
 
   return (
     <div className="m-2 p-6 rounded-xl shadow-lg bg-white">
@@ -37,42 +63,47 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {existingAutomations.map((auto) => (
-            <div
-              key={auto.id}
-              className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-semibold text-gray-800">{auto.type}</h4>
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    auto.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {auto.status}
-                </span>
-              </div>
+          {existingAutomations.length === 0 && (
+            <p className="text-sm text-gray-600">No existing automation...</p>
+          )}
 
-              <div className="text-sm text-gray-600">
-                {auto.type === "Weekly Loan Repayment" ? (
-                  <p>Repaying {auto.params.percentage}% of rewards weekly</p>
-                ) : (
-                  auto.params.split && (
-                    <p>
-                      Splitting rewards to {auto.params.split[0]}% BTC /{" "}
-                      {auto.params.split[1]}% ETH
-                    </p>
-                  )
-                )}
-              </div>
+          {existingAutomations &&
+            existingAutomations.map((auto) => (
+              <div
+                key={auto.id}
+                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-semibold text-gray-800">{auto.type}</h4>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      auto.status === "active"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {auto.status}
+                  </span>
+                </div>
 
-              <div className="mt-3 text-xs text-gray-500">
-                Last executed: 2 days ago
+                <div className="text-sm text-gray-600">
+                  {auto.type === "Weekly Loan Repayment" ? (
+                    <p>Repaying {auto.params.percentage}% of rewards weekly</p>
+                  ) : (
+                    auto.params.split && (
+                      <p>
+                        Splitting rewards to {auto.params.split[0]}% BTC /{" "}
+                        {auto.params.split[1]}% ETH
+                      </p>
+                    )
+                  )}
+                </div>
+
+                <div className="mt-3 text-xs text-gray-500">
+                  Last executed: 2 days ago
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -83,24 +114,25 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 transition-colors group">
+          <PopupButton
+            ButtonComponent={RewardSplitButton}
+            ModalComponent={AutomateRewardSplitModal}
+            modalProps={{
+              vaultAddress,
+              onClose: async () => {},
+            }}
+          />
+
+          <button
+            disabled
+            className="p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 transition-colors group disabled:opacity-50 disabled:hover:border-gray-300 disabled:cursor-not-allowed"
+          >
             <div className="text-center">
-              <div className="text-lg font-semibold text-gray-800 group-hover:text-blue-600">
+              <div className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 group-disabled:text-gray-400 group-disabled:group-hover:text-gray-400">
                 Weekly Loan Repayment
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 mt-2 group-disabled:text-gray-400">
                 Automatically use a percentage of rewards to repay loans weekly
-              </p>
-            </div>
-          </button>
-
-          <button className="p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 transition-colors group">
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-800 group-hover:text-blue-600">
-                Reward Split Automation
-              </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Automatically split lending rewards between BTC and ETH
               </p>
             </div>
           </button>
