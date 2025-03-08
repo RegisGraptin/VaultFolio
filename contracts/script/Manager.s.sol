@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
 import {Manager} from "../src/Manager.sol";
+import {SendTokenStrategy} from "../src/strategy/SendTokenStrategy.sol";
 
 // AAVE addresses
 // https://github.com/bgd-labs/aave-address-book/blob/main/src/AaveV3ScrollSepolia.sol
@@ -13,7 +14,7 @@ contract ManagerScript is Script {
 
     function setUp() public {}
 
-    function run() public returns (address) {
+    function run() public returns (address, address) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
@@ -33,8 +34,15 @@ contract ManagerScript is Script {
 
         manager = new Manager(account, POOL_ADDRESSES_PROVIDER_ADDRESS);
 
+        // Create the strategies
+        // No Scroll address at the moment: https://docs.uniswap.org/contracts/v3/reference/deployments/
+        SendTokenStrategy sendTokenStrategy = new SendTokenStrategy(address(0));
+
+        manager.whitelistStrategy(address(sendTokenStrategy));
+
+
         vm.stopBroadcast();
         
-        return address(manager);
+        return (address(manager), address(sendTokenStrategy));
     }
 }

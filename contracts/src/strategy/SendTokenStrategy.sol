@@ -12,23 +12,24 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 uint256 constant TOTAL_PERCENT = 1_000_000;
 
-struct SendStrategyParams {
-    address vaultAddress;
-    address yieldAsset;
-    address targetAsset;
-    address to;
-    uint256 minSupplyThreshold;
-    uint256 percentAllocation;
-    uint256 executionAfter;
-}
-
 /// @title Send Token Strategy.
 /// @notice Given a yield token, convert it to the targeted token and send it to the request address.
 /// As an example, take 20% yield from USDC and convert it to ETH to send it to a custom address. 
 /// @dev For the swap, we are relying on Uniswap V3 at the moment.
 /// Documentation: https://docs.uniswap.org/contracts/v3/guides/swaps/single-swaps
 contract SendTokenStrategy is IStrategy {
-    
+
+    struct SendStrategyParams {
+        address vaultAddress;
+        address yieldAsset;
+        address targetAsset;
+        address to;
+        uint256 minSupplyThreshold;
+        uint256 percentAllocation;
+        uint256 executionAfter;
+    }
+
+
     ISwapRouter public immutable swapRouter;
     uint24 public constant poolFee = 3000;
 
@@ -43,8 +44,8 @@ contract SendTokenStrategy is IStrategy {
     error InvalidToAddressError();
 
 
-    constructor(ISwapRouter _swapRouter) {
-        swapRouter = _swapRouter;
+    constructor(address _swapRouterAddress) {
+        swapRouter = ISwapRouter(_swapRouterAddress);
     }
 
     function subscribe(
