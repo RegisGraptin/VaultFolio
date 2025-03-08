@@ -9,7 +9,7 @@ export const AssetTokenSelect = ({
   onChange,
 }: {
   tokens: Token[];
-  selected: Address;
+  selected: string;
   onChange: (value: string) => void;
 }) => {
   const selectedToken = tokens.find((t) => t.address === selected);
