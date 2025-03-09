@@ -290,6 +290,12 @@ const AutomateRewardSplitModal: React.FC<ModalProps> = ({
             Create Strategy
           </LoadingButton>
         </div>
+
+        {error && (
+          <div>
+            <p>{error.message}</p>
+          </div>
+        )}
       </div>
     </div>
   );

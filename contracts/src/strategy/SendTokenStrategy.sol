@@ -43,6 +43,11 @@ contract SendTokenStrategy is IStrategy {
     error InvalidPercentAllocationError();
     error InvalidToAddressError();
 
+    /// @notice Get strategy parameters
+    function getParams(uint256 _subscriptionId) external view returns (SendStrategyParams memory) {
+        return params[_subscriptionId];
+    }
+
 
     constructor(address _swapRouterAddress) {
         swapRouter = ISwapRouter(_swapRouterAddress);

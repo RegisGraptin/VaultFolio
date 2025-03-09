@@ -1,6 +1,9 @@
 import PopupButton from "@/components/button/PopupButton";
 import { Address } from "viem";
 import AutomateRewardSplitModal from "../automation/AutomateRewardSplitModal";
+import { useVault } from "@/utils/hook/vault";
+import AutomationWidget from "../automation/AutomationWidget";
+import { SubscribedStrategies } from "@/utils/automation";
 
 const RewardSplitButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   return (
@@ -20,28 +23,11 @@ const RewardSplitButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   );
 };
 
+// For an array of these structs
+
 const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
-  // Temporary data - replace with your actual data source
-  const existingAutomations: {
-    type: string;
-    params: any;
-    status: string;
-  }[] = [];
-  //   {
-  //     id: 1,
-  //     type: "Weekly Loan Repayment",
-  //     params: { percentage: 15 },
-  //     vault: vaultAddress,
-  //     status: "active",
-  //   },
-  //   {
-  //     id: 2,
-  //     type: "Reward Split",
-  //     params: { assets: ["BTC", "ETH"], split: [50, 50] },
-  //     vault: vaultAddress,
-  //     status: "inactive",
-  //   },
-  // ];
+  const { data: subscribedStrategies, refetch: refetchSubscribedStrategies } =
+    useVault(vaultAddress, "getAllSubscribedStrategies");
 
   return (
     <div className="m-2 p-6 rounded-xl shadow-lg bg-white">
@@ -61,47 +47,20 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {existingAutomations.length === 0 && (
-            <p className="text-sm text-gray-600">No existing automation...</p>
-          )}
-
-          {existingAutomations &&
-            existingAutomations.map((auto, index) => (
-              <div
-                key={index}
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-gray-800">{auto.type}</h4>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      auto.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {auto.status}
-                  </span>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  {auto.type === "Weekly Loan Repayment" ? (
-                    <p>Repaying {auto.params.percentage}% of rewards weekly</p>
-                  ) : (
-                    auto.params.split && (
-                      <p>
-                        Splitting rewards to {auto.params.split[0]}% BTC /{" "}
-                        {auto.params.split[1]}% ETH
-                      </p>
-                    )
-                  )}
-                </div>
-
-                <div className="mt-3 text-xs text-gray-500">
-                  Last executed: 2 days ago
-                </div>
-              </div>
+          {subscribedStrategies === undefined ||
+            ((subscribedStrategies as SubscribedStrategies).length === 0 && (
+              <p className="text-sm text-gray-600">No existing automation...</p>
             ))}
+
+          {(subscribedStrategies as SubscribedStrategies) &&
+            (subscribedStrategies as SubscribedStrategies).map(
+              (subscribedStrategy, index) => (
+                <AutomationWidget
+                  subscribedStrategy={subscribedStrategy}
+                  key={index}
+                />
+              )
+            )}
         </div>
       </div>
 
@@ -117,7 +76,9 @@ const VaultAutomationView = ({ vaultAddress }: { vaultAddress: Address }) => {
             ModalComponent={AutomateRewardSplitModal}
             modalProps={{
               vaultAddress,
-              onClose: async () => {},
+              onClose: async () => {
+                refetchSubscribedStrategies();
+              },
             }}
           />
 

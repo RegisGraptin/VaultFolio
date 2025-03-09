@@ -36,6 +36,11 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
     /// @notice List of strategies subscribed by the vault.
     SubscribeStrategyStruct[] public subscribedStrategies;
 
+    /// @notice Fetch the subscribed strategies
+    function getAllSubscribedStrategies() external view returns (SubscribeStrategyStruct[] memory) {
+        return subscribedStrategies;
+    }
+
     constructor(
         address _aaveProviderAddress,
         address _manager,

@@ -1,7 +1,6 @@
 import { Token } from "@/utils/tokens/tokens";
 import { Listbox } from "@headlessui/react";
 import { BiChevronUp } from "react-icons/bi";
-import { Address } from "viem";
 
 export const AssetTokenSelect = ({
   tokens,
