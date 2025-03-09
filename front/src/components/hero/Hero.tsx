@@ -113,6 +113,7 @@ export default function Hero() {
               autoPlay
               muted
             >
+              <source src="/videos/DemoVaultFolio.webm" type="video/webm" />
               <source src="/videos/DemoVaultFolio.mp4" type="video/mp4" />
             </video>
           </div>
