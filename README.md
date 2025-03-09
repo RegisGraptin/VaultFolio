@@ -16,7 +16,7 @@
     &middot;
     <a href="https://www.vaultfolio.xyz/">Website</a>
     &middot;
-    <a href="#">Video Demo [TBD]</a>
+    <a href="https://www.vaultfolio.xyz/videos/DemoVaultFolio.mp4">Video Demo</a>
     
   </p>
 </div>
