@@ -48,8 +48,7 @@ export default function WhyChooseUs() {
             </span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
-            We&apos;re redefining DeFi management through innovative
-            architecture and user-centric design
+            We&apos;re redefining DeFi management through user-centric design.
           </p>
         </div>
 

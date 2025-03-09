@@ -5,24 +5,25 @@ import { TbPigMoney } from "react-icons/tb";
 export default function HowItWorks() {
   const steps = [
     {
-      title: "Set Up Your Vault",
-      description: "Create your vault and defined your strategies.",
+      title: "Keep Your DeFi Moves Separate & Safe",
+      description:
+        "Create isolated vaults to silo your DeFi strategies. Keep your safe staking separate from your risky plays. No more domino effects if one goes sideways.",
       icon: <FaVault />,
       webm: "/videos/part1.webm",
       mp4: "/videos/part1.mp4",
     },
     {
-      title: "Configure Your Rules",
+      title: "Deposit, Borrow, Earn—Risk-Adjusted",
       description:
-        "Define actions like “Invest 30% yield in ETH” or “Repay loans with yield.”",
+        "Provide liquidity, borrow against assets, or loop yields—all within a single vault. One strategy’s risk stays locked away from the rest.",
       icon: <FaListCheck />,
       webm: "/videos/part2.webm",
       mp4: "/videos/part2.mp4",
     },
     {
-      title: "Sit Back & Earn",
+      title: "Set It and Forget It",
       description:
-        "Let your strategy flow seamlessly, with full control and easy adjustments.",
+        "Turn yield into auto-repayments, DCA buys, or compounding loops. Your vault works while you sleep.",
       icon: <TbPigMoney />,
       webm: "/videos/part3.webm",
       mp4: "/videos/part3.mp4",
@@ -35,18 +36,18 @@ export default function HowItWorks() {
         {/* Section Header */}
         <div className="text-center mb-20 space-y-6">
           <span className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text font-semibold text-sm uppercase tracking-widest">
-            Why VaultFolio
+            DeFi Strategy,
           </span>
           <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Manage your{" "}
+            DeFi Strategy{" "}
             <span className="relative whitespace-nowrap">
               <span className="absolute -bottom-2 left-0 h-3 w-full bg-indigo-100/80 z-0" />
-              <span className="relative">Strategies</span>
+              <span className="relative">Simplified</span>
             </span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-600">
-            Discover how our platform transforms your daily operations through
-            intuitive features and smart automation.
+            Compartmentalize risks, automate workflows, and scale your crypto
+            strategies—all from one dashboard.
           </p>
         </div>
 
@@ -93,8 +94,9 @@ export default function HowItWorks() {
         {/* CTA Section */}
         <div className="mt-30 text-center">
           <Link href={"/dashboard"} title="Start Your Strategy">
-            <button className="inline-flex items-center px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl">
-              Define Your Strategy
+            {/* <button className="inline-flex items-center px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105"> */}
+            <button className="inline-flex items-center sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl text-lg font-semibold text-white transition-all transform hover:scale-105 shadow-sm hover:shadow-md">
+              Start Building Your Vault
               <FaArrowRight className="ml-3 w-5 h-5" />
             </button>
           </Link>
