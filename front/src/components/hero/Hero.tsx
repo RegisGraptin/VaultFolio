@@ -105,14 +105,16 @@ export default function Hero() {
           className="mt-16 max-w-6xl mx-auto rounded-3xl overflow-hidden border border-gray-200 bg-white shadow-lg"
         >
           <div className="aspect-video relative">
-            <iframe
+            <video
               className="w-full h-full"
-              src=""
+              src="/videos/DemoVaultFolio.mp4"
               title="Vaultfolio Platform Demo"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            ></iframe>
+              controls
+              autoPlay
+              muted
+            >
+              <source src="/videos/DemoVaultFolio.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
       </div>

@@ -8,24 +8,24 @@ export default function HowItWorks() {
       title: "Set Up Your Vault",
       description: "Create your vault and defined your strategies.",
       icon: <FaVault />,
-      webm: "",
-      mp4: "/videos/VaultFolioDemo.mp4",
+      webm: "/videos/part1.webm",
+      mp4: "/videos/part1.mp4",
     },
     {
       title: "Configure Your Rules",
       description:
         "Define actions like “Invest 30% yield in ETH” or “Repay loans with yield.”",
       icon: <FaListCheck />,
-      webm: "",
-      mp4: "/videos/VaultFolioDemo.mp4",
+      webm: "/videos/part2.webm",
+      mp4: "/videos/part2.mp4",
     },
     {
       title: "Sit Back & Earn",
       description:
         "Let your strategy flow seamlessly, with full control and easy adjustments.",
       icon: <TbPigMoney />,
-      webm: "",
-      mp4: "/videos/VaultFolioDemo.mp4",
+      webm: "/videos/part3.webm",
+      mp4: "/videos/part3.mp4",
     },
   ];
 
@@ -80,7 +80,7 @@ export default function HowItWorks() {
                     playsInline
                     controls={false}
                   >
-                    {/* <source src={step.webm} type="video/webm" /> */}
+                    <source src={step.webm} type="video/webm" />
                     <source src={step.mp4} type="video/mp4" />
                   </video>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
@@ -91,10 +91,10 @@ export default function HowItWorks() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center">
+        <div className="mt-30 text-center">
           <Link href={"/dashboard"} title="Start Your Strategy">
             <button className="inline-flex items-center px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-xl">
-              Start Your Strategy
+              Define Your Strategy
               <FaArrowRight className="ml-3 w-5 h-5" />
             </button>
           </Link>
