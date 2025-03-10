@@ -76,8 +76,8 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
     }
 
     function withdraw(address asset, uint256 amount) external onlyOwner {
-        IPool(_aavePoolAddress()).withdraw(asset, amount, msg.sender);
-        emit Withdraw(asset, amount);
+        uint256 amountWitdraw = IPool(_aavePoolAddress()).withdraw(asset, amount, msg.sender);
+        emit Withdraw(asset, amountWitdraw);
     }
 
     function borrow(
@@ -109,7 +109,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
             interestRateMode,
             address(this)
         );
-        emit Repay(asset, amount, interestRateMode);
+        emit Repay(asset, amountRepaid, interestRateMode);
         return amountRepaid;
     }
 

@@ -99,7 +99,6 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
     // Should be disabled if we do not have an input value
     // If the input value is greater than the approval value
     // If we are loading the value of the allowance
-    // console.log;
     return (
       amount == "" ||
       Number(amount) == 0 ||
@@ -156,6 +155,7 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
 
   const {
     writeContract: writeRepayToken,
+    error: repayError,
     data: txHashRepay,
     isPending: isRepaying,
   } = useWriteContract();
@@ -427,11 +427,11 @@ const VaultRepayFormModal: React.FC<ModalProps> = ({
         </div>
 
         {/* Error Message */}
-        {/* {borrowError && (
+        {repayError && (
           <div className="mt-4 text-center text-sm text-red-600">
-            {borrowError.message}
+            {repayError.message}
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

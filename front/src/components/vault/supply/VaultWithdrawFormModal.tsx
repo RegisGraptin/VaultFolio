@@ -147,7 +147,7 @@ const VaultWithdrawFormModal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">Amount</span>
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500">Vault balance</span>
+              <span className="text-sm text-gray-500">Available</span>
               <span className="text-sm font-medium text-gray-700">
                 {vaultBalance
                   ? formatBalance(maxWithdrawAmount, vaultBalance.decimals)

@@ -41,9 +41,6 @@ const CreateVaultFormModal = ({ onClose }: { onClose: () => void }) => {
   function createNewVault() {
     const colorIndex = VAULT_COLORS.indexOf(selectedColor);
 
-    console.log("Create a new vault: '" + vaultName + "' - " + selectedColor);
-    console.log(error);
-
     writeContract({
       address: process.env.NEXT_PUBLIC_MANAGER_ADDRESS as Address,
       abi: Manager.abi,
@@ -84,9 +81,6 @@ const CreateVaultFormModal = ({ onClose }: { onClose: () => void }) => {
     } else {
       console.log("VaultCreated event not found in logs.");
     }
-
-    console.log("vaultAddress");
-    console.log(vaultAddress);
 
     router.push(`/vaults/${vaultAddress}`);
   }, [txReceipt]);

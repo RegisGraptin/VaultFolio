@@ -12,7 +12,10 @@ import {
 import { Token, TOKEN_ASSETS } from "@/utils/tokens/tokens";
 import LoadingButton from "../../button/LoadingButton";
 import { useReadOracle } from "@/utils/hook/oracle";
-import { convertAssetToUSD } from "@/utils/tokens/balance";
+import {
+  convertAssetToUSD,
+  validateAndFormatAmount,
+} from "@/utils/tokens/balance";
 
 const MAXIMAL_HEALTH_FACTOR = 1.5;
 
@@ -95,20 +98,6 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
     }
   }, [amount, totalLending, totalBorrowing, oraclePriceUsd]);
 
-  const validateAndFormatAmount = (): bigint | null => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      console.error("Invalid amount");
-      return null;
-    }
-
-    try {
-      return parseUnits(amount.toString(), token.decimals);
-    } catch (error) {
-      console.error("Error supplying token:", error);
-      return null;
-    }
-  };
-
   const {
     writeContract: writeBorrowToken,
     data: txHashBorrow,
@@ -129,7 +118,7 @@ const VaultBorrowFormModal: React.FC<ModalProps> = ({
   }, [isTxBorrowConfirmed]);
 
   const borrowToken = () => {
-    let formattedAmount = validateAndFormatAmount();
+    let formattedAmount = validateAndFormatAmount(amount, token.decimals);
     if (!formattedAmount) return;
 
     // FIXME: Need to indicate on the UI only variable rate are available

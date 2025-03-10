@@ -79,7 +79,7 @@ const usePortfolio = ({
   const { data: addressPriceOracle } = useOracle("getPriceOracle");
   const tokenAddresses = useMemo(() => Object.keys(tokens), [tokens]);
 
-  const { data: tokenBalances } = useReadContracts({
+  const { data: tokenBalances, refetch: refetchBalance } = useReadContracts({
     query: { enabled: !!vaultAddress },
     contracts: tokenAddresses.map((tokenAddress) => ({
       abi: erc20Abi,
@@ -168,7 +168,7 @@ const usePortfolio = ({
     }
   }, [aaveTokenDetails, tokenBalances, tokenPrices, tokenAddresses, tokens]);
 
-  return { total, totalAPY, allocations, isLoading };
+  return { total, totalAPY, allocations, isLoading, refetchBalance };
 };
 
 // Specific hooks
@@ -177,12 +177,19 @@ export const usePortfolioLending = ({
 }: {
   vaultAddress: Address;
 }) => {
-  const { total, totalAPY, allocations, isLoading } = usePortfolio({
-    vaultAddress,
-    tokens: LENDING_TOKENS,
-    mode: "lending",
-  });
-  return { totalLending: total, lendingAPY: totalAPY, allocations, isLoading };
+  const { total, totalAPY, allocations, isLoading, refetchBalance } =
+    usePortfolio({
+      vaultAddress,
+      tokens: LENDING_TOKENS,
+      mode: "lending",
+    });
+  return {
+    totalLending: total,
+    lendingAPY: totalAPY,
+    allocations,
+    isLoading,
+    refetchBalance,
+  };
 };
 
 export const usePortfolioBorrowing = ({
@@ -190,16 +197,18 @@ export const usePortfolioBorrowing = ({
 }: {
   vaultAddress: Address;
 }) => {
-  const { total, totalAPY, allocations, isLoading } = usePortfolio({
-    vaultAddress,
-    tokens: DEBT_TOKENS,
-    mode: "borrowing",
-  });
+  const { total, totalAPY, allocations, isLoading, refetchBalance } =
+    usePortfolio({
+      vaultAddress,
+      tokens: DEBT_TOKENS,
+      mode: "borrowing",
+    });
   return {
     totalBorrowing: total,
     borrowingAPY: totalAPY,
     allocations,
     isLoading,
+    refetchBalance,
   };
 };
 

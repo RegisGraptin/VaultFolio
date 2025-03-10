@@ -16,18 +16,25 @@ contract VaultTest is Test {
     Vault public vault;
 
     // Mainnet Aave V3 Pool Address
-    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
+    // address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
+
+    // Scroll Sepolia address
+    address immutable public POOL_ADDRESSES_PROVIDER_ADDRESS = 0x52A27dC690F8652288194Dd2bc523863eBdEa236;
     
     // Test user
     address public user = makeAddr('user');
 
     // Tokens (Mainnet addresses)
-    IERC20 public usdc = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48); // USDC
-    IERC20 public aUsdc = IERC20(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c); // aUSDC
+    // IERC20 public usdc = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48); // USDC
+    // IERC20 public aUsdc = IERC20(0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c); // aUSDC
+
+    IERC20 public usdc = IERC20(0x2C9678042D52B97D27f2bD2947F7111d93F3dD0D); // USDC
+    IERC20 public aUsdc = IERC20(0x6E4A1BcBd3C3038e6957207cadC1A17092DC7ba3); // aUSDC
 
 
     function setUp() public {
-        vm.createSelectFork('https://rpc.ankr.com/eth');
+        // https://rpc.ankr.com/eth
+        vm.createSelectFork('https://rpc.ankr.com/scroll_sepolia_testnet');
 
 
         manager = new Manager(ownerManager, POOL_ADDRESSES_PROVIDER_ADDRESS);

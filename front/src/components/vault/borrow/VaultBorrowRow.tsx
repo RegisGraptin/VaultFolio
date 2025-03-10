@@ -52,11 +52,12 @@ const VaultBorrowRow = ({
   // Get asset information from the AAVE pool
   const { data: reserveData } = useAave("getReserveData", [assetAddress]);
 
-  const { totalBorrowing } = usePortfolioBorrowing({
-    vaultAddress,
-  });
+  const { totalBorrowing, refetchBalance: refetchBorrowing } =
+    usePortfolioBorrowing({
+      vaultAddress,
+    });
 
-  const { totalLending } = usePortfolioLending({
+  const { totalLending, refetchBalance: refetchLending } = usePortfolioLending({
     vaultAddress,
   });
 
@@ -193,6 +194,8 @@ const VaultBorrowRow = ({
                   // Refresh the vault & user balance
                   await refetchUserBalance();
                   await refetchVaultBalance();
+                  await refetchLending();
+                  await refetchBorrowing();
                 },
               }}
             />
@@ -209,6 +212,8 @@ const VaultBorrowRow = ({
                   // Refresh the vault & user balance
                   await refetchUserBalance();
                   await refetchVaultBalance();
+                  await refetchLending();
+                  await refetchBorrowing();
                 },
               }}
             />
