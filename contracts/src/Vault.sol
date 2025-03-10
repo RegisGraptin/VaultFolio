@@ -63,7 +63,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         return IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER_ADDRESS).getPool();
     }
 
-    function supply(address asset, uint256 amount) external {
+    function supply(address asset, uint256 amount) external onlyOwner {
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
         IERC20(asset).approve(_aavePoolAddress(), amount);
         IPool(_aavePoolAddress()).supply(
@@ -75,7 +75,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         emit Supply(asset, amount);
     }
 
-    function withdraw(address asset, uint256 amount) external {
+    function withdraw(address asset, uint256 amount) external onlyOwner {
         IPool(_aavePoolAddress()).withdraw(asset, amount, msg.sender);
         emit Withdraw(asset, amount);
     }
@@ -84,7 +84,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         address asset,
         uint256 amount,
         uint256 interestRateMode
-    ) external {
+    ) external onlyOwner {
         IPool(_aavePoolAddress()).borrow(
             asset,
             amount,
@@ -100,7 +100,7 @@ contract Vault is IVault, Ownable, ReentrancyGuard {
         address asset,
         uint256 amount,
         uint256 interestRateMode
-    ) external returns (uint256) {
+    ) external onlyOwner returns (uint256) {
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
         IERC20(asset).approve(_aavePoolAddress(), amount);
         uint256 amountRepaid = IPool(_aavePoolAddress()).repay(
