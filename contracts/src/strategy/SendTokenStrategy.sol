@@ -103,7 +103,7 @@ contract SendTokenStrategy is IStrategy {
     function execute(
         uint256 _subscriptionId
     ) external override returns (bool) {
-        require(owner[subscriptionId] == msg.sender, "Not allowed");
+        require(owner[_subscriptionId] == msg.sender, "Not allowed");
         require(_isExecutable(_subscriptionId), "Not executable");
         
         // Update last execution
@@ -128,6 +128,7 @@ contract SendTokenStrategy is IStrategy {
         
         // Transfer the specified amount of DAI to this contract.
         TransferHelper.safeTransferFrom(params[_subscriptionId].yieldAsset, msg.sender, address(this), amountToSend);
+        // TransferHelper.safeTransfer(params[_subscriptionId].yieldAsset, address(this), amountToSend);
 
         // Approve the router to spend DAI.
         TransferHelper.safeApprove(params[_subscriptionId].yieldAsset, address(swapRouter), amountToSend);
